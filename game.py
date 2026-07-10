@@ -7,8 +7,11 @@ import json
 #import detect
 import detect_yolo
 
-with open('t1.json', 'r') as file:
+with open('/Users/cslab/Desktop/SALICS/levels/l1/map.json', 'r') as file:
     data = json.load(file)
+
+with open('/Users/cslab/Desktop/SALICS/levels/l1/cirtp.json', 'r') as file:
+    ps = json.load(file)
 
 
 pygame.init()
@@ -35,7 +38,9 @@ class Pipe(Connecter):
         pygame.draw.circle(screen, (0, 255, 0), self.endpoint2, radius=5)
 
 
-circuit = [Pipe(data[i]['x'], data[i]['y']) for i in data]
+circuit = [Pipe((data[i]['x'][0],data[i]['y'][0]), (data[i]['x'][1],data[i]['y'][1])) for i in data]
+detcP = [((ps[i]['x'][0],ps[i]['y'][0]), (ps[i]['x'][1],ps[i]['y'][1])) for i in ps]
+print(detcP)
 
 
 def surface_to_image(surface: pygame.Surface) -> np.ndarray:
@@ -69,8 +74,8 @@ def update():
 
 def render(frame: np.ndarray):
     screen.blit(image_to_surface(frame), (0, 0))
-    #for connector in circuit:
-    #    connector.draw()
+    for connector in circuit:
+       connector.draw()
     pygame.display.flip()
 
 
