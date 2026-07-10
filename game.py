@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 import pygame
 from pygame import camera
 
@@ -52,11 +53,10 @@ def image_to_surface(image: np.ndarray) -> pygame.Surface:
     return surface
 
 
-def add_skeleton(frame: pygame.Surface) -> pygame.Surface:
-    frame_arr = surface_to_image(frame)
-    detect_result = detect.get_detect_result(frame_arr)
-    result_image = detect.visualizeResults(frame_arr, detect_result)
-    return image_to_surface(result_image)
+def add_skeleton(frame: np.ndarray) -> np.ndarray:
+    detect_result = detect.get_detect_result(frame)
+    result_image = detect.visualizeResults(frame, detect_result)
+    return result_image
 
 
 def get_hand_position(detect_result):
@@ -75,16 +75,16 @@ def update():
     pass
 
 
-def render(frame: pygame.Surface):
-    screen.blit(frame, (0, 0))
+def render(frame: np.ndarray):
+    screen.blit(image_to_surface(frame), (0, 0))
     #for connector in circuit:
     #    connector.draw()
     pygame.display.flip()
 
 
-cam_list = pygame.camera.list_cameras()
-cam = pygame.camera.Camera(cam_list[0], (WIDTH, HEIGHT))
-cam.start()
+camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
+camera.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 
 clock = pygame.time.Clock()
 running = True
@@ -94,16 +94,16 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    raw_frame = cam.get_image()
-    frame = pygame.transform.flip(raw_frame, True, False)
+    ret, frame = camera.read()
+    if not ret:
+        print("Failed to grab frame.")
+        break
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame = cv2.flip(frame, 1)
 
     result_frame = add_skeleton(frame)
     update()
     render(result_frame)
     clock.tick(30)
 
-cam.stop()
 pygame.quit()
-
-#123123
-#test change
