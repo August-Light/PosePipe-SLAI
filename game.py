@@ -3,8 +3,6 @@ import cv2
 import pygame
 import json
 
-#import detect_new as detect
-#import detect
 import detect_yolo
 
 with open('/Users/cslab/Desktop/SALICS/levels/l1/map.json', 'r') as file:
@@ -55,21 +53,18 @@ def image_to_surface(image: np.ndarray) -> pygame.Surface:
     return surface
 
 
-"""
-def add_skeleton(frame: np.ndarray) -> np.ndarray:
-    detect_result = detect.get_detect_result(frame)
-    result_image = detect.visualizeResults(frame, detect_result)
-    return result_image
-"""
+def distance(point1, point2):
+    return np.linalg.norm(point1 - point2)
 
-def add_skeleton(frame: np.ndarray) -> np.ndarray:
-    processed_frame = frame.copy()
-    detect_result = detect_yolo.get_detect_result(processed_frame)
-    detect_yolo.plot_result(processed_frame, detect_result)
-    return processed_frame
 
-def update():
-    pass
+def update(detect_result):
+    # https://docs.ultralytics.com/tasks/pose
+    for kpts in detect_result.keypoints: # every person
+        joints = kpts.xy[0].cpu().numpy() # [0] refers to the first batch
+        left_wrist = joints[9]
+        right_wrist = joints[10]
+        print(distance(left_wrist, right_wrist))
+        
 
 
 def render(frame: np.ndarray):
@@ -103,9 +98,13 @@ while running:
     if frame is None:
         break
 
-    result_frame = add_skeleton(frame)
-    update()
-    render(result_frame)
+    detect_result = detect_yolo.get_detect_result(frame)
+    update(detect_result)
+    detect_yolo.plot_result(frame, detect_result)
+    render(frame)
     clock.tick(30)
+
+    current_fps = clock.get_fps()
+    print(f"Current FPS: {current_fps:.2f}")
 
 pygame.quit()
