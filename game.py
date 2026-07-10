@@ -69,15 +69,17 @@ def get_keypoints(detect_result):
     keypoints_list = []
     for kpts in detect_result.keypoints: # every person
         joints = kpts.xy[0].cpu().numpy() # [0] refers to the first batch
+        confs = kpts.conf[0].cpu().numpy()
         keypoints_list.append({
-            "left_wrist": joints[9],
-            "right_wrist": joints[10],
-            "left_ankle": joints[15],
-            "right_ankle": joints[16],
+            "left_wrist":  {"pos": joints[9],  "conf": confs[9]},
+            "right_wrist": {"pos": joints[10], "conf": confs[10]},
+            "left_ankle":  {"pos": joints[15], "conf": confs[15]},
+            "right_ankle": {"pos": joints[16], "conf": confs[16]},
         })
     return keypoints_list
 
 n = 4
+VISIBILITY_THRESHOLD = 0.5
 def update(keypoints_list):
     global endpoints, pipes
     endpoints = endpoints_original[:]
@@ -87,13 +89,13 @@ def update(keypoints_list):
     for endpoint in endpoints_original:
         endpoint.glow = False
         for keypoints in keypoints_list:
-            for kpt_name, position in keypoints.items():
-                #print(position.)
+            for kpt_name, kpt_data in keypoints.items():
+                if kpt_data["conf"] < VISIBILITY_THRESHOLD:
+                    continue
+                position = kpt_data["pos"]
                 endpoints.append(Endpoint(position.tolist(), global_index))
-                
                 if distance(position, endpoint.position) < THRESHOLD:
                     endpoint.glow = True
-
                     pipes.append(Pipe(endpoint.idx, global_index))
                 global_index += 1
 
