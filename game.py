@@ -4,7 +4,8 @@ import pygame
 import json
 
 #import detect_new as detect
-import detect
+#import detect
+import detect_yolo
 
 with open('t1.json', 'r') as file:
     data = json.load(file)
@@ -49,23 +50,18 @@ def image_to_surface(image: np.ndarray) -> pygame.Surface:
     return surface
 
 
+"""
 def add_skeleton(frame: np.ndarray) -> np.ndarray:
     detect_result = detect.get_detect_result(frame)
     result_image = detect.visualizeResults(frame, detect_result)
     return result_image
+"""
 
-
-def get_hand_position(detect_result):
-    if detect_result.pose_landmarks:
-        left_hand = detect_result.pose_landmarks[0][15]  # 左手关键点索引为 15
-        right_hand = detect_result.pose_landmarks[0][16]  # 右手关键点索引为 16
-
-        return {
-            "left_hand": (left_hand.x, left_hand.y, left_hand.visibility),
-            "right_hand": (right_hand.x, right_hand.y, right_hand.visibility)
-        }
-    return None
-
+def add_skeleton(frame: np.ndarray) -> np.ndarray:
+    processed_frame = frame.copy()
+    detect_result = detect_yolo.get_detect_result(processed_frame)
+    detect_yolo.plot_result(processed_frame, detect_result)
+    return processed_frame
 
 def update():
     pass
