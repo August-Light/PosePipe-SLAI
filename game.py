@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import pygame
-from pygame import camera
+
 import json
 
 #import detect_new as detect
@@ -12,7 +12,6 @@ with open('t1.json', 'r') as file:
 
 
 pygame.init()
-camera.init()
 
 WIDTH, HEIGHT = 1920, 1080
 #WIDTH, HEIGHT = 960, 540
