@@ -2,9 +2,14 @@ import numpy as np
 import cv2
 import pygame
 from pygame import camera
+import json
 
 #import detect_new as detect
 import detect
+
+with open('t1.json', 'r') as file:
+    data = json.load(file)
+
 
 pygame.init()
 camera.init()
@@ -31,14 +36,7 @@ class Pipe(Connecter):
         pygame.draw.circle(screen, (0, 255, 0), self.endpoint2, radius=5)
 
 
-circuit = []
-circuit.append(Pipe((100, 100), (150, 100)))
-circuit.append(Pipe((250, 100), (600, 100)))
-circuit.append(Pipe((700, 100), (800, 100)))
-circuit.append(Pipe((800, 100), (800, 600)))
-circuit.append(Pipe((800, 600), (600, 600)))
-circuit.append(Pipe((100, 600), (300, 600)))
-circuit.append(Pipe((100, 100), (100, 600)))
+circuit = [Pipe(data[i]['x'], data[i]['y']) for i in data]
 
 
 def surface_to_image(surface: pygame.Surface) -> np.ndarray:
