@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import pygame
-
 import json
 
 #import detect_new as detect
@@ -83,6 +82,14 @@ camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 
+def grab_frame():
+    success, frame = camera.read()
+    if not success:
+        return None
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame = cv2.flip(frame, 1)
+    return frame
+
 clock = pygame.time.Clock()
 running = True
 
@@ -91,12 +98,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    ret, frame = camera.read()
-    if not ret:
-        print("Failed to grab frame.")
+    frame = grab_frame()
+    if frame is None:
         break
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    frame = cv2.flip(frame, 1)
 
     result_frame = add_skeleton(frame)
     update()
