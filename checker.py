@@ -31,7 +31,3 @@ def check(e, n):
         print("yes")
     else:
         print("no")
-
-check(cases[0], 4)  
-check(cases[1], 6)  
-check(cases[2], 3)

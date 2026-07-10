@@ -5,6 +5,7 @@ import json
 
 import detect_yolo
 
+
 def surface_to_image(surface: pygame.Surface) -> np.ndarray:
     arr = pygame.surfarray.array3d(surface)
     arr = np.transpose(arr, (1, 0, 2)) # Swap axes from (W, H, C) to (H, W, C)
@@ -21,32 +22,46 @@ def distance(point1, point2):
     return np.linalg.norm(point1 - point2)
 
 
-with open('/Users/cslab/Desktop/SALICS/levels/l1/map.json', 'r') as file:
-    data = json.load(file)
+THRESHOLD = 100
 
-with open('/Users/cslab/Desktop/SALICS/levels/l1/cirtp.json', 'r') as file:
-    ps = json.load(file)
+class Endpoint:
+    def __init__(self, position, idx):
+        self.position = position
+        self.glow = False
+        self.idx = idx
+
+    def draw(self, surface):
+        if self.glow:
+            pygame.draw.circle(surface, (0, 255, 0), self.position, radius=10)
+        else:
+            pygame.draw.circle(surface, (0, 255, 0), self.position, radius=THRESHOLD, width=10)
 
 
 class Connecter:
-    def __init__(self, endpoint1, endpoint2):
-        self.endpoint1 = endpoint1
-        self.endpoint2 = endpoint2
+    def __init__(self, endpoint_idx1: int, endpoint_idx2: int):
+        self.endpoint_idx1 = endpoint_idx1
+        self.endpoint_idx2 = endpoint_idx2
 
 
 class Pipe(Connecter):
-    def __init__(self, endpoint1, endpoint2):
-        super().__init__(endpoint1, endpoint2)
+    def __init__(self, endpoint_idx1, endpoint_idx2):
+        super().__init__(endpoint_idx1, endpoint_idx2)
 
     def draw(self, surface):
-        pygame.draw.line(surface, (128, 64, 0), self.endpoint1, self.endpoint2, width=10)
-        pygame.draw.circle(surface, (0, 255, 0), self.endpoint1, radius=5)
-        pygame.draw.circle(surface, (0, 255, 0), self.endpoint2, radius=5)
+        pygame.draw.line(surface, (128, 64, 0),
+                         endpoints[self.endpoint_idx1].position,
+                         endpoints[self.endpoint_idx2].position, width=10)
 
 
-circuit = [Pipe((data[i]['x'][0],data[i]['y'][0]), (data[i]['x'][1],data[i]['y'][1])) for i in data]
-detcP = [((ps[i]['x'][0],ps[i]['y'][0]), (ps[i]['x'][1],ps[i]['y'][1])) for i in ps]
-print(detcP)
+with open('/Users/cslab/Desktop/SALICS/levels/l1/map.json', 'r') as file:
+    data = json.load(file)
+
+    endpoints_original = [Endpoint(pos, idx=i) for i, pos in enumerate(data["Endpoints"])]
+    pipes_original = [Pipe(u, v) for u, v in data["Pipes"]]
+
+    endpoints = []
+    pipes = []
+
 
 
 def get_keypoints(detect_result):
@@ -62,15 +77,34 @@ def get_keypoints(detect_result):
         })
     return keypoints_list
 
-
+n = 4
 def update(keypoints_list):
-    pass
+    global endpoints, pipes
+    endpoints = endpoints_original[:]
+    pipes = pipes_original[:]
+
+    global_index = n
+    for endpoint in endpoints_original:
+        endpoint.glow = False
+        for keypoints in keypoints_list:
+            for kpt_name, position in keypoints.items():
+                #print(position.)
+                endpoints.append(Endpoint(position.tolist(), global_index))
+                
+                if distance(position, endpoint.position) < THRESHOLD:
+                    endpoint.glow = True
+
+                    pipes.append(Pipe(endpoint.idx, global_index))
+                global_index += 1
+
 
 
 def render(surface, frame: np.ndarray):
     surface.blit(image_to_surface(frame), (0, 0))
-    #for connector in circuit:
-    #   connector.draw(surface)
+    for pipe in pipes:
+        pipe.draw(surface)
+    for endpoint in endpoints:
+        endpoint.draw(surface)
     pygame.display.flip()
 
 
@@ -111,7 +145,7 @@ while running:
     render(screen, frame)
 
     clock.tick(30)
-    current_fps = clock.get_fps()
-    print(f"Current FPS: {current_fps:.2f}")
+    #current_fps = clock.get_fps()
+    #print(f"Current FPS: {current_fps:.2f}")
 
 pygame.quit()
