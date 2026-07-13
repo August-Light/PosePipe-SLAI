@@ -78,7 +78,7 @@ def get_keypoints(detect_result):
         })
     return keypoints_list
 
-n = 4
+n = 4 # TODO:
 VISIBILITY_THRESHOLD = 0.5
 def update(keypoints_list):
     global endpoints, pipes
