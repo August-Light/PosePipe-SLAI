@@ -1,5 +1,6 @@
+# graph_theory.py
 
-def connected_and_no_cycle(neighbors, S, T, numpre):
+def connected_and_no_cycle(neighbors, S, T, num_pre_written):
     n = len(neighbors)
     visited = [False] * n
     has_cycle = False
@@ -16,8 +17,9 @@ def connected_and_no_cycle(neighbors, S, T, numpre):
 
     dfs(S, None)
     
-    exist = visited[T]
+    path_exists = visited[T]
     
-    all_po = all(visited[i] for i in range(numpre))
+    # Check that every single pre-written point (0 to num_pre_written - 1) was visited
+    all_points_linked = all(visited[i] for i in range(num_pre_written))
 
-    return exist and all_po and not has_cycle
+    return path_exists and all_points_linked and not has_cycle

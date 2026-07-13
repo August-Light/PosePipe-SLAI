@@ -22,7 +22,7 @@ def distance(point1, point2):
     return np.linalg.norm(np.array(point1) - np.array(point2))
 
 
-THRESHOLD = 100
+THRESHOLD = 150
 
 class Endpoint:
     def __init__(self, position, idx):
@@ -90,9 +90,6 @@ def get_keypoints(detect_result):
     for kpts in detect_result.keypoints:
         joints = kpts.xy[0].cpu().numpy()
         confs = kpts.conf[0].cpu().numpy()
-        
-        if len(joints) < 17:
-            continue
             
         keypoints_list.append({
             "left_wrist":  {"pos": joints[9],  "conf": confs[9]},
@@ -105,7 +102,10 @@ def get_keypoints(detect_result):
 
 VISIBILITY_THRESHOLD = 0.5
 
+
+fl = 0
 def update(keypoints_list):
+    global fl
     n = len(pipe_ends)
 
     global body_ends, extra_pipes
@@ -149,6 +149,7 @@ def update(keypoints_list):
                         
                     global_index += 1
 
+        # Connect wrists to wrists only
         for i in range(len(person_wrists)):
             for j in range(i + 1, len(person_wrists)):
                 u_idx = person_wrists[i]
@@ -156,6 +157,7 @@ def update(keypoints_list):
                 mock_extra = ExtraPipe(BodyEnd([0, 0], u_idx), BodyEnd([0, 0], v_idx))
                 extra_pipes.append(mock_extra)
 
+        # Connect ankles to ankles only
         for i in range(len(person_ankles)):
             for j in range(i + 1, len(person_ankles)):
                 u_idx = person_ankles[i]
@@ -178,8 +180,9 @@ def update(keypoints_list):
         neighbors[u].append(v)
         neighbors[v].append(u)
         
-    if connected_and_no_cycle(neighbors, S, T, len(pipe_ends)):
-        print("ok")
+    if connected_and_no_cycle(neighbors, S, T, num_pre_written=len(pipe_ends)):
+        print(fl)
+        fl+=1
 
 
 def render(surface, frame: np.ndarray):
