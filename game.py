@@ -22,7 +22,7 @@ def distance(point1, point2):
     return np.linalg.norm(np.array(point1) - np.array(point2))
 
 
-THRESHOLD = 150
+THRESHOLD = 100
 
 class Endpoint:
     def __init__(self, position, idx):
@@ -149,7 +149,6 @@ def update(keypoints_list):
                         
                     global_index += 1
 
-        # Connect wrists to wrists only
         for i in range(len(person_wrists)):
             for j in range(i + 1, len(person_wrists)):
                 u_idx = person_wrists[i]
@@ -157,7 +156,6 @@ def update(keypoints_list):
                 mock_extra = ExtraPipe(BodyEnd([0, 0], u_idx), BodyEnd([0, 0], v_idx))
                 extra_pipes.append(mock_extra)
 
-        # Connect ankles to ankles only
         for i in range(len(person_ankles)):
             for j in range(i + 1, len(person_ankles)):
                 u_idx = person_ankles[i]
@@ -180,7 +178,7 @@ def update(keypoints_list):
         neighbors[u].append(v)
         neighbors[v].append(u)
         
-    if connected_and_no_cycle(neighbors, S, T, num_pre_written=len(pipe_ends)):
+    if connected_and_no_cycle(neighbors, S, T, len(pipe_ends)):
         print("ok")
 
 
