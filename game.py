@@ -107,8 +107,15 @@ def update(keypoints_list):
     body_ends = []
     extra_pipes = []
 
+    S = 0 # start
+    T = n-1 # end
+
     global_index = n
-    for pipe_end in pipe_ends:
+    # change here
+    for idx, pipe_end in enumerate(pipe_ends):
+        if idx == S or idx == T:
+            continue
+            
         pipe_end.connected = False
         for keypoints in keypoints_list:
             for kpt_name, kpt_data in keypoints.items():
@@ -121,9 +128,6 @@ def update(keypoints_list):
                     pipe_end.connected = True
                     extra_pipes.append(ExtraPipe(pipe_end, body_end))
                 global_index += 1
-
-    S = 0 # start
-    T = n-1 # end
 
     """
     neighbors = [[] for _ in range(m)]
