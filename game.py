@@ -4,6 +4,7 @@ import pygame
 import json
 
 import detect_yolo
+from graph_theory import connected_and_no_cycle
 
 
 def surface_to_image(surface: pygame.Surface) -> np.ndarray:
@@ -22,45 +23,64 @@ def distance(point1, point2):
     return np.linalg.norm(point1 - point2)
 
 
-THRESHOLD = 100
+THRESHOLD = 150
 
 class Endpoint:
     def __init__(self, position, idx):
         self.position = position
-        self.glow = False
+        self.connected = False
         self.idx = idx
 
+
+class PipeEnd(Endpoint):
+    def __init__(self, position, idx):
+        super().__init__(position, idx)
+
     def draw(self, surface):
-        if self.glow:
+        if self.connected:
             pygame.draw.circle(surface, (0, 255, 0), self.position, radius=10)
         else:
             pygame.draw.circle(surface, (0, 255, 0), self.position, radius=THRESHOLD, width=10)
 
 
+class BodyEnd(Endpoint):
+    def __init__(self, position, idx):
+        super().__init__(position, idx)
+
+    def draw(self, surface):
+        pygame.draw.circle(surface, (255, 0, 0), self.position, radius=10)
+
+
 class Connecter:
-    def __init__(self, endpoint_idx1: int, endpoint_idx2: int):
-        self.endpoint_idx1 = endpoint_idx1
-        self.endpoint_idx2 = endpoint_idx2
+    def __init__(self, endpoint1: Endpoint, endpoint2: Endpoint):
+        self.endpoint1 = endpoint1
+        self.endpoint2 = endpoint2
 
 
 class Pipe(Connecter):
-    def __init__(self, endpoint_idx1, endpoint_idx2):
-        super().__init__(endpoint_idx1, endpoint_idx2)
+    def __init__(self, endpoint1, endpoint2):
+        super().__init__(endpoint1, endpoint2)
 
     def draw(self, surface):
-        pygame.draw.line(surface, (128, 64, 0),
-                         endpoints[self.endpoint_idx1].position,
-                         endpoints[self.endpoint_idx2].position, width=10)
+        pygame.draw.line(surface, (128, 64, 0), self.endpoint1.position, self.endpoint2.position, width=10)
+
+
+class ExtraPipe(Connecter):
+    def __init__(self, endpoint1, endpoint2):
+        super().__init__(endpoint1, endpoint2)
+
+    def draw(self, surface):
+        pygame.draw.line(surface, (128, 128, 0), self.endpoint1.position, self.endpoint2.position, width=10)
 
 
 with open('/Users/cslab/Desktop/SALICS/levels/l1/map.json', 'r') as file:
     data = json.load(file)
 
-    endpoints_original = [Endpoint(pos, idx=i) for i, pos in enumerate(data["Endpoints"])]
-    pipes_original = [Pipe(u, v) for u, v in data["Pipes"]]
+    pipe_ends = [PipeEnd(pos, idx=i) for i, pos in enumerate(data["Endpoints"])]
+    pipes = [Pipe(pipe_ends[u], pipe_ends[v]) for u, v in data["Pipes"]]
 
-    endpoints = []
-    pipes = []
+    body_ends = []
+    extra_pipes = []
 
 
 
@@ -78,26 +98,47 @@ def get_keypoints(detect_result):
         })
     return keypoints_list
 
-n = 4 # TODO:
+
 VISIBILITY_THRESHOLD = 0.5
 def update(keypoints_list):
-    global endpoints, pipes
-    endpoints = endpoints_original[:]
-    pipes = pipes_original[:]
+    n = len(pipe_ends)
+
+    global body_ends, extra_pipes
+    body_ends = []
+    extra_pipes = []
 
     global_index = n
-    for endpoint in endpoints_original:
-        endpoint.glow = False
+    for pipe_end in pipe_ends:
+        pipe_end.connected = False
         for keypoints in keypoints_list:
             for kpt_name, kpt_data in keypoints.items():
                 if kpt_data["conf"] < VISIBILITY_THRESHOLD:
                     continue
                 position = kpt_data["pos"]
-                endpoints.append(Endpoint(position.tolist(), global_index))
-                if distance(position, endpoint.position) < THRESHOLD:
-                    endpoint.glow = True
-                    pipes.append(Pipe(endpoint.idx, global_index))
+                body_end = BodyEnd(position.tolist(), global_index)
+                body_ends.append(body_end)
+                if distance(position, pipe_end.position) < THRESHOLD:
+                    pipe_end.connected = True
+                    extra_pipes.append(ExtraPipe(pipe_end, body_end))
                 global_index += 1
+
+    S = 0 # start
+    T = n-1 # end
+
+    """
+    neighbors = [[] for _ in range(m)]
+    for pipe in pipes:
+        u = pipe.endpoint1
+        v = pipe.endpoint2
+        neighbors[u].append(v)
+        neighbors[v].append(u)
+    
+    flag = connected_and_no_cycle(neighbors, S)
+
+    if flag:
+        print("Yeah")
+    """
+
 
 
 
@@ -105,8 +146,12 @@ def render(surface, frame: np.ndarray):
     surface.blit(image_to_surface(frame), (0, 0))
     for pipe in pipes:
         pipe.draw(surface)
-    for endpoint in endpoints:
-        endpoint.draw(surface)
+    for extra_pipe in extra_pipes:
+        extra_pipe.draw(surface)
+    for pipe_end in pipe_ends:
+        pipe_end.draw(surface)
+    for body_end in body_ends:
+        body_end.draw(surface)
     pygame.display.flip()
 
 

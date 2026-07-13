@@ -3,6 +3,9 @@ from ultralytics import YOLO
 
 model = YOLO("data/yolo26n-pose.mlpackage")
 
+def get_detect_result(frame, verbose=False):
+    return model(frame, verbose=verbose)[0]
+
 # AI gen
 SKELETON_CONNECTIONS = [
     (0, 1), (0, 2), (1, 3), (2, 4),      # Face connections
@@ -13,9 +16,6 @@ SKELETON_CONNECTIONS = [
     (11, 13), (13, 15),                  # Left leg (Hip -> Knee -> Ankle)
     (12, 14), (14, 16)                   # Right leg
 ]
-
-def get_detect_result(frame, verbose=False):
-    return model(frame, verbose=verbose)[0]
 
 def plot_result(frame, result):
     for kpts in result.keypoints:
