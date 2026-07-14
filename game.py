@@ -55,16 +55,18 @@ THRESHOLD = 150
 class Endpoint:
     def __init__(self, position, idx):
         self.position = position
-        self.connected = False
         self.idx = idx
+
+        self.connected = False
 
 
 class PipeEnd(Endpoint):
-    def __init__(self, position, idx):
+    def __init__(self, position, idx, allow_connect):
         super().__init__(position, idx)
+        self.allow_connect = allow_connect
 
     def draw(self, surface):
-        if self.connected:
+        if self.connected or not self.allow_connect:
             pygame.draw.circle(surface, (0, 255, 0), self.position, radius=10)
         else:
             pygame.draw.circle(surface, (0, 255, 0), self.position, radius=THRESHOLD, width=1)
@@ -102,10 +104,10 @@ class ExtraPipe(Connecter):
         draw_pipe(surface, gold_pipe_image, self.endpoint1.position, self.endpoint2.position)
 
 
-with open('levels/l4/map.json', 'r') as file:
+with open('levels/Level2/map.json', 'r') as file:
     data = json.load(file)
 
-    pipe_ends = [PipeEnd(pos, idx=i) for i, pos in enumerate(data["Endpoints"])]
+    pipe_ends = [PipeEnd(d["pos"], idx=d["id"], allow_connect=d["allow_connect"]) for d in data["Endpoints"]]
     pipes = [Pipe(pipe_ends[u], pipe_ends[v]) for u, v in data["Pipes"]]
 
     body_ends = []
@@ -148,10 +150,6 @@ def update(keypoints_list):
     for pipe_end in pipe_ends:
         pipe_end.connected = False
 
-    
-    S = 0 # start
-    T = len(pipe_ends) - 1 # end
-
     n = len(pipe_ends)
     for keypoints in keypoints_list:
         current_person_ends = {}
@@ -169,9 +167,7 @@ def update(keypoints_list):
             body_ends.append(body_end)
             current_person_ends[kpt_name] = body_end
             for pipe_end in pipe_ends:
-                if pipe_end.idx == S or pipe_end.idx == T:
-                    continue
-                if distance(position, pipe_end.position) < THRESHOLD:
+                if pipe_end.allow_connect and distance(position, pipe_end.position) < THRESHOLD:
                     pipe_end.connected = True
                     extra_pipes.append(ExtraPipe(pipe_end, body_end))
             
@@ -189,11 +185,11 @@ def update(keypoints_list):
 
 
     neighbors = build_neighbors()
-    
+    S = 0 # start
+    T = len(pipe_ends) - 1 # end
     success, flows = valid_water_flow(neighbors, S, T)
 
     if success:
-        
         all_water = True
         for pipe in pipes:
             u = pipe.endpoint1.idx
