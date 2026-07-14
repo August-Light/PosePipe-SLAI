@@ -6,7 +6,7 @@ def valid_water_flow(neighbors, S, T):
     VISITED = 1
     PROCESSED = 2
 
-    print(neighbors, S, T)
+    # print(neighbors, S, T)
     n = len(neighbors)
     state = [UNVISITED] * n
     flows = []
@@ -38,4 +38,4 @@ def valid_water_flow(neighbors, S, T):
 
 if __name__ == "__main__":
     neighbors3 = [[1, 2], [0, 6], [0, 3], [2, 4, 5], [3], [3, 6], [1, 5]]
-    print(valid_water_flow(neighbors3, 0, 4))
+    print(valid_water_flow(neighbors3, 0, 4)) 

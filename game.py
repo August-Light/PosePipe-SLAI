@@ -73,7 +73,7 @@ class ExtraPipe(Connecter):
         pygame.draw.line(surface, (128, 128, 0), self.endpoint1.position, self.endpoint2.position, width=10)
 
 
-with open('levels/l3/map.json', 'r') as file:
+with open('levels/l1/map.json', 'r') as file:
     data = json.load(file)
 
     pipe_ends = [PipeEnd(pos, idx=i) for i, pos in enumerate(data["Endpoints"])]
@@ -119,6 +119,10 @@ def update(keypoints_list):
     for pipe_end in pipe_ends:
         pipe_end.connected = False
 
+    
+    S = 0 # start
+    T = len(pipe_ends) - 1 # end
+
     n = len(pipe_ends)
     for keypoints in keypoints_list:
         current_person_ends = {}
@@ -136,6 +140,8 @@ def update(keypoints_list):
             body_ends.append(body_end)
             current_person_ends[kpt_name] = body_end
             for pipe_end in pipe_ends:
+                if pipe_end.idx == S or pipe_end.idx == T:
+                    continue
                 if distance(position, pipe_end.position) < THRESHOLD:
                     pipe_end.connected = True
                     extra_pipes.append(ExtraPipe(pipe_end, body_end))
@@ -152,15 +158,12 @@ def update(keypoints_list):
             extra_pipes.append(ExtraPipe(left_a, right_a))
             
 
-    S = 0 # start
-    T = len(pipe_ends) - 1 # end
 
     neighbors = build_neighbors()
     
     success, flows = valid_water_flow(neighbors, S, T)
 
     if success:
-        print("Water can flow from start to end!")
         
         all_water = True
         for pipe in pipes:
@@ -224,6 +227,6 @@ while running:
 
     clock.tick(30)
     current_fps = clock.get_fps()
-    print(f"Current FPS: {current_fps:.2f}")
+    # print(f"Current FPS: {current_fps:.2f}")
 
 pygame.quit()
