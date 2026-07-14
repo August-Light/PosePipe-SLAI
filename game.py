@@ -1,3 +1,4 @@
+from math import hypot, degrees, atan2
 import numpy as np
 import cv2
 import pygame
@@ -5,6 +6,12 @@ import json
 
 import detect_yolo
 from graph_theory import valid_water_flow
+
+
+pygame.init()
+WIDTH, HEIGHT = 1920, 1080
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("GAME")
 
 
 def surface_to_image(surface: pygame.Surface) -> np.ndarray:
@@ -19,8 +26,28 @@ def image_to_surface(image: np.ndarray) -> pygame.Surface:
     return surface
 
 
-def distance(point1, point2):
+def distance(point1: np.ndarray, point2: np.ndarray) -> float:
     return np.linalg.norm(point1 - point2)
+
+
+pipe_image = pygame.image.load("img/pipe.png").convert_alpha()
+gold_pipe_image = pygame.image.load("img/gold_pipe.png").convert_alpha()
+def draw_pipe(surface, pipe_image, p1, p2):
+    dx = p2[0] - p1[0]
+    dy = p2[1] - p1[1]
+    dis = int(hypot(dx, dy))
+    
+    if dis == 0:
+        return
+
+    pipe_thickness = 30 #pipe_image.get_width()
+    scaled_image = pygame.transform.scale(pipe_image, (pipe_thickness, dis))
+    angle = degrees(atan2(-dy, dx)) - 90
+    rotated_image = pygame.transform.rotate(scaled_image, angle)
+
+    rect = rotated_image.get_rect()
+    rect.center = ((p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2)
+    surface.blit(rotated_image, rect.topleft)
 
 
 THRESHOLD = 150
@@ -40,7 +67,7 @@ class PipeEnd(Endpoint):
         if self.connected:
             pygame.draw.circle(surface, (0, 255, 0), self.position, radius=10)
         else:
-            pygame.draw.circle(surface, (0, 255, 0), self.position, radius=THRESHOLD, width=10)
+            pygame.draw.circle(surface, (0, 255, 0), self.position, radius=THRESHOLD, width=1)
 
 
 class BodyEnd(Endpoint):
@@ -62,7 +89,8 @@ class Pipe(Connecter):
         super().__init__(endpoint1, endpoint2)
 
     def draw(self, surface):
-        pygame.draw.line(surface, (128, 64, 0), self.endpoint1.position, self.endpoint2.position, width=10)
+        #pygame.draw.line(surface, (128, 64, 0), self.endpoint1.position, self.endpoint2.position, width=10)
+        draw_pipe(surface, pipe_image, self.endpoint1.position, self.endpoint2.position)
 
 
 class ExtraPipe(Connecter):
@@ -70,7 +98,8 @@ class ExtraPipe(Connecter):
         super().__init__(endpoint1, endpoint2)
 
     def draw(self, surface):
-        pygame.draw.line(surface, (128, 128, 0), self.endpoint1.position, self.endpoint2.position, width=10)
+        #pygame.draw.line(surface, (128, 128, 0), self.endpoint1.position, self.endpoint2.position, width=10)
+        draw_pipe(surface, gold_pipe_image, self.endpoint1.position, self.endpoint2.position)
 
 
 with open('levels/l4/map.json', 'r') as file:
@@ -189,11 +218,6 @@ def render(surface, frame: np.ndarray):
         pipe_end.draw(surface)
     pygame.display.flip()
 
-
-pygame.init()
-WIDTH, HEIGHT = 1920, 1080
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("GAME")
 
 camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
