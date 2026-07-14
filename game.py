@@ -4,7 +4,8 @@ import pygame
 import json
 
 import detect_yolo
-from graph_theory import connected_and_no_cycle
+from graph_theory import valid_water_flow
+
 
 def surface_to_image(surface: pygame.Surface) -> np.ndarray:
     arr = pygame.surfarray.array3d(surface)
@@ -19,14 +20,14 @@ def image_to_surface(image: np.ndarray) -> pygame.Surface:
 
 
 def distance(point1, point2):
-    return np.linalg.norm(np.array(point1) - np.array(point2))
+    return np.linalg.norm(point1 - point2)
 
 
 THRESHOLD = 150
 
 class Endpoint:
     def __init__(self, position, idx):
-        self.position = [int(position[0]), int(position[1])]
+        self.position = position
         self.connected = False
         self.idx = idx
 
@@ -72,7 +73,7 @@ class ExtraPipe(Connecter):
         pygame.draw.line(surface, (128, 128, 0), self.endpoint1.position, self.endpoint2.position, width=10)
 
 
-with open('/Users/cslab/Desktop/SALICS/levels/l1/map.json', 'r') as file:
+with open('levels/l3/map.json', 'r') as file:
     data = json.load(file)
 
     pipe_ends = [PipeEnd(pos, idx=i) for i, pos in enumerate(data["Endpoints"])]
@@ -82,15 +83,13 @@ with open('/Users/cslab/Desktop/SALICS/levels/l1/map.json', 'r') as file:
     extra_pipes = []
 
 
+
 def get_keypoints(detect_result):
+    # https://docs.ultralytics.com/tasks/pose
     keypoints_list = []
-    if detect_result.keypoints is None:
-        return keypoints_list
-        
-    for kpts in detect_result.keypoints:
-        joints = kpts.xy[0].cpu().numpy()
+    for kpts in detect_result.keypoints: # every person
+        joints = kpts.xy[0].cpu().numpy() # [0] refers to the first batch
         confs = kpts.conf[0].cpu().numpy()
-            
         keypoints_list.append({
             "left_wrist":  {"pos": joints[9],  "conf": confs[9]},
             "right_wrist": {"pos": joints[10], "conf": confs[10]},
@@ -100,102 +99,91 @@ def get_keypoints(detect_result):
     return keypoints_list
 
 
-VISIBILITY_THRESHOLD = 0.5
-
-
-fl = 0
-def update(keypoints_list):
-    global fl
-    n = len(pipe_ends)
-
-    global body_ends, extra_pipes
-    body_ends = []
-    extra_pipes = []
-
-    S = 0
-    T = n - 1
-
-    for pipe_end in pipe_ends:
-        pipe_end.connected = False
-
-    global_index = n
-    
-    for person_idx, keypoints in enumerate(keypoints_list):
-        person_wrists = []
-        person_ankles = []
-        
-        for kpt_name, kpt_data in keypoints.items():
-            if kpt_data["conf"] < VISIBILITY_THRESHOLD:
-                continue
-                
-            position = kpt_data["pos"]
-            
-            for idx, pipe_end in enumerate(pipe_ends):
-                if idx == S or idx == T:
-                    continue
-                    
-                if distance(position, pipe_end.position) < THRESHOLD:
-                    pipe_end.connected = True
-                    
-                    body_end = BodyEnd(position, global_index)
-                    body_ends.append(body_end)
-                    
-                    extra_pipes.append(ExtraPipe(pipe_end, body_end))
-                    
-                    if "wrist" in kpt_name:
-                        person_wrists.append(global_index)
-                    elif "ankle" in kpt_name:
-                        person_ankles.append(global_index)
-                        
-                    global_index += 1
-
-        # Connect wrists to wrists only
-        for i in range(len(person_wrists)):
-            for j in range(i + 1, len(person_wrists)):
-                u_idx = person_wrists[i]
-                v_idx = person_wrists[j]
-                mock_extra = ExtraPipe(BodyEnd([0, 0], u_idx), BodyEnd([0, 0], v_idx))
-                extra_pipes.append(mock_extra)
-
-        # Connect ankles to ankles only
-        for i in range(len(person_ankles)):
-            for j in range(i + 1, len(person_ankles)):
-                u_idx = person_ankles[i]
-                v_idx = person_ankles[j]
-                mock_extra = ExtraPipe(BodyEnd([0, 0], u_idx), BodyEnd([0, 0], v_idx))
-                extra_pipes.append(mock_extra)
-
-    total_nodes = global_index
-    neighbors = [[] for _ in range(total_nodes)]
-    
-    for pipe in pipes:
+def build_neighbors():
+    n = len(pipe_ends) + len(body_ends)
+    neighbors = [[] for _ in range(n)]
+    for pipe in pipes + extra_pipes:
         u = pipe.endpoint1.idx
         v = pipe.endpoint2.idx
         neighbors[u].append(v)
         neighbors[v].append(u)
+    return neighbors
+
+
+VISIBILITY_THRESHOLD = 0.5
+def update(keypoints_list):
+    global body_ends, extra_pipes
+    body_ends = []
+    extra_pipes = []
+
+    for pipe_end in pipe_ends:
+        pipe_end.connected = False
+
+    n = len(pipe_ends)
+    for keypoints in keypoints_list:
+        current_person_ends = {}
+
+        def visible(kpt_name):
+            return keypoints[kpt_name]["conf"] >= VISIBILITY_THRESHOLD
+
+        for kpt_name, kpt_data in keypoints.items():
+            if not visible(kpt_name):
+                continue
+            position = kpt_data["pos"]
+            body_end = BodyEnd(position.tolist(), n) # n as new global index
+            n += 1
+
+            body_ends.append(body_end)
+            current_person_ends[kpt_name] = body_end
+            for pipe_end in pipe_ends:
+                if distance(position, pipe_end.position) < THRESHOLD:
+                    pipe_end.connected = True
+                    extra_pipes.append(ExtraPipe(pipe_end, body_end))
+            
+
+        if visible("left_wrist") and visible("right_wrist"):
+            left_w = current_person_ends["left_wrist"]
+            right_w = current_person_ends["right_wrist"]
+            extra_pipes.append(ExtraPipe(left_w, right_w))
+
+        if visible("left_ankle") and visible("right_ankle"):
+            left_a = current_person_ends["left_ankle"]
+            right_a = current_person_ends["right_ankle"]
+            extra_pipes.append(ExtraPipe(left_a, right_a))
+            
+
+    S = 0 # start
+    T = len(pipe_ends) - 1 # end
+
+    neighbors = build_neighbors()
+    
+    success, flows = valid_water_flow(neighbors, S, T)
+
+    if success:
+        print("Water can flow from start to end!")
         
-    for ep in extra_pipes:
-        u = ep.endpoint1.idx
-        v = ep.endpoint2.idx
-        neighbors[u].append(v)
-        neighbors[v].append(u)
+        all_water = True
+        for pipe in pipes:
+            u = pipe.endpoint1.idx
+            v = pipe.endpoint2.idx
+            if (u, v) not in flows and (v, u) not in flows:
+                all_water = False
+                break
         
-    if connected_and_no_cycle(neighbors, S, T, num_pre_written=len(pipe_ends)):
-        print(fl)
-        fl+=1
+        if all_water:
+            print("All pipes are filled with water! You win!")
+        else:
+            print("Not all pipes are filled with water.")
+                
+
 
 
 def render(surface, frame: np.ndarray):
     surface.blit(image_to_surface(frame), (0, 0))
-    for pipe in pipes:
+    for pipe in pipes + extra_pipes:
         pipe.draw(surface)
-    for extra_pipe in extra_pipes:
-        if isinstance(extra_pipe.endpoint1, PipeEnd) or isinstance(extra_pipe.endpoint2, PipeEnd):
-            extra_pipe.draw(surface)
-    for pipe_end in pipe_ends:
+    for pipe_end in pipe_ends + body_ends:
         pipe_end.draw(surface)
-    for body_end in body_ends:
-        body_end.draw(surface)
     pygame.display.flip()
 
 
@@ -204,7 +192,7 @@ WIDTH, HEIGHT = 1920, 1080
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("GAME")
 
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 
@@ -235,5 +223,7 @@ while running:
     render(screen, frame)
 
     clock.tick(30)
+    current_fps = clock.get_fps()
+    print(f"Current FPS: {current_fps:.2f}")
 
 pygame.quit()

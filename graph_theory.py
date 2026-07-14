@@ -1,25 +1,41 @@
-# graph_theory.py
+from collections import deque
 
-def connected_and_no_cycle(neighbors, S, T, num_pre_written):
+
+def valid_water_flow(neighbors, S, T):
+    UNVISITED = 0
+    VISITED = 1
+    PROCESSED = 2
+
+    print(neighbors, S, T)
     n = len(neighbors)
-    visited = [False] * n
-    has_cycle = False
+    state = [UNVISITED] * n
+    flows = []
 
-    def dfs(node, parent):
-        nonlocal has_cycle  
-        visited[node] = True
-        
-        for neighbor in neighbors[node]:
-            if not visited[neighbor]:
-                dfs(neighbor, node)
-            elif neighbor != parent:
-                has_cycle = True
+    queue = deque([S])
+    while queue:
+        current = queue.popleft()
+        #print("current:", current, "state:", state, "queue:", list(queue))
+        if current == T:
+            state[current] = VISITED
+            continue
 
-    dfs(S, None)
-    
-    path_exists = visited[T]
-    
-    # Check that every single pre-written point (0 to num_pre_written - 1) was visited
-    all_points_linked = all(visited[i] for i in range(num_pre_written))
+        state[current] = PROCESSED
 
-    return path_exists and all_points_linked and not has_cycle
+        has_unprocessed_neighbor = False
+        for neighbor in neighbors[current]:
+            if state[neighbor] != PROCESSED:
+                has_unprocessed_neighbor = True
+                flows.append((current, neighbor))
+                if state[neighbor] == UNVISITED:
+                    state[neighbor] = VISITED
+                    queue.append(neighbor)
+
+        if not has_unprocessed_neighbor:
+            return False, None
+
+    return True, flows
+
+
+if __name__ == "__main__":
+    neighbors3 = [[1, 2], [0, 6], [0, 3], [2, 4, 5], [3], [3, 6], [1, 5]]
+    print(valid_water_flow(neighbors3, 0, 4))
