@@ -36,7 +36,6 @@ def draw_pipe(surface, pipe_image, p1, p2):
     dx = p2[0] - p1[0]
     dy = p2[1] - p1[1]
     dis = int(hypot(dx, dy))
-    print(dis)
     
     if dis == 0:
         return
