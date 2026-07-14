@@ -103,7 +103,7 @@ class ExtraPipe(Connecter):
         draw_pipe(surface, gold_pipe_image, self.endpoint1.position, self.endpoint2.position)
 
 
-with open('levels/l1/map.json', 'r') as file:
+with open('levels/l4/map.json', 'r') as file:
     data = json.load(file)
 
     pipe_ends = [PipeEnd(pos, idx=i) for i, pos in enumerate(data["Endpoints"])]
