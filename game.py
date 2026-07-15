@@ -55,21 +55,6 @@ with open('assets/levels/Level1/map.json', 'r') as file:
     extra_pipes = []
 
 
-def get_keypoints(detect_result):
-    # https://docs.ultralytics.com/tasks/pose
-    keypoints_list = []
-    for kpts in detect_result.keypoints: # every person
-        joints = kpts.xy[0].cpu().numpy() # [0] refers to the first batch
-        confs = kpts.conf[0].cpu().numpy()
-        keypoints_list.append({
-            "left_wrist":  {"pos": joints[9],  "conf": confs[9]},
-            "right_wrist": {"pos": joints[10], "conf": confs[10]},
-            "left_ankle":  {"pos": joints[15], "conf": confs[15]},
-            "right_ankle": {"pos": joints[16], "conf": confs[16]},
-        })
-    return keypoints_list
-
-
 def build_neighbors():
     n = len(pipe_ends) + len(body_ends)
     neighbors = [[] for _ in range(n)]
@@ -85,7 +70,7 @@ start_ticks = None
 level_done = False
 def update(frame):
     detect_result = detect_yolo.get_detect_result(frame)
-    keypoints_list = get_keypoints(detect_result)
+    keypoints_list = detect_yolo.get_keypoints(detect_result)
     detect_yolo.plot_result(frame, detect_result)
 
     global body_ends, extra_pipes
@@ -273,14 +258,10 @@ while True:
     frame = grab_frame()
     if frame is None:
         break
-    
 
     if hasattr(current_scene, 'update'):
         current_scene = current_scene.update(time_delta, frame)
     ui_manager.update(time_delta)
-
-
-    update(frame)
     
     current_scene.render(screen, frame)
     ui_manager.draw_ui(screen)

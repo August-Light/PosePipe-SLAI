@@ -10,9 +10,24 @@ elif current_os == "Darwin":
     print("Running on macOS")
     model = YOLO("assets/models/yolo26n-pose.mlpackage")
 
+
 def get_detect_result(frame, verbose=False):
     return model(frame, verbose=verbose)[0]
 
+
+def get_keypoints(detect_result):
+    # https://docs.ultralytics.com/tasks/pose
+    keypoints_list = []
+    for kpts in detect_result.keypoints: # every person
+        joints = kpts.xy[0].cpu().numpy() # [0] refers to the first batch
+        confs = kpts.conf[0].cpu().numpy()
+        keypoints_list.append({
+            "left_wrist":  {"pos": joints[9],  "conf": confs[9]},
+            "right_wrist": {"pos": joints[10], "conf": confs[10]},
+            "left_ankle":  {"pos": joints[15], "conf": confs[15]},
+            "right_ankle": {"pos": joints[16], "conf": confs[16]},
+        })
+    return keypoints_list
 
 # ==========================
 
