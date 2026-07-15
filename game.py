@@ -81,6 +81,8 @@ def build_neighbors():
     return neighbors
 
 
+start_ticks = None
+level_done = False
 def update(frame):
     detect_result = detect_yolo.get_detect_result(frame)
     keypoints_list = get_keypoints(detect_result)
@@ -131,6 +133,7 @@ def update(frame):
     T = len(pipe_ends) - 1 # end
     success, flows = valid_water_flow(neighbors, S, T)
 
+    global start_ticks, level_done
     if success:
         all_water = True
         for pipe in pipes:
@@ -141,9 +144,21 @@ def update(frame):
                 break
         
         if all_water:
-            print("All pipes are filled with water! You win!")
+            print("All pipes are filled with water!")
+            if start_ticks is None:
+                start_ticks = pygame.time.get_ticks()
+            else:
+
+                elapsed_time = pygame.time.get_ticks() - start_ticks
+                if elapsed_time >= HOLD_TIME_MS:
+                    print('yes')
+                    level_done = True
+                    start_ticks = pygame.time.get_ticks()
         else:
             print("Not all pipes are filled with water.")
+            start_ticks = None
+    else:
+        start_ticks = None
 
 
 camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
@@ -230,8 +245,12 @@ class GameplayScene:
 
     def render(self, surface, frame: np.ndarray):
         surface.blit(image_to_surface(frame), (0, 0))
+        SUC_COLOR = (0,150,255)
         for pipe in pipes + extra_pipes:
-            pipe.draw(surface)
+            if level_done:
+                pipe.draw(surface, color=SUC_COLOR)
+            else:
+                pipe.draw(surface)
         for pipe_end in pipe_ends + body_ends:
             pipe_end.draw(surface)
 
@@ -254,7 +273,6 @@ while True:
     frame = grab_frame()
     if frame is None:
         break
-
     
 
     if hasattr(current_scene, 'update'):

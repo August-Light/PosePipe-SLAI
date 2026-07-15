@@ -67,16 +67,22 @@ class Pipe(Connecter):
     def __init__(self, endpoint1, endpoint2):
         super().__init__(endpoint1, endpoint2)
 
-    def draw(self, surface):
-        #pygame.draw.line(surface, (128, 64, 0), self.endpoint1.position, self.endpoint2.position, width=10)
-        draw_pipe(surface, pipe_image, self.endpoint1.position, self.endpoint2.position)
+    def draw(self, surface, color=None):
+        current_image = pipe_image.copy()
+        if color is not None:
+            current_image.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
+        draw_pipe(surface, current_image, self.endpoint1.position, self.endpoint2.position)
 
 
 class ExtraPipe(Connecter):
     def __init__(self, endpoint1, endpoint2):
         super().__init__(endpoint1, endpoint2)
 
-    def draw(self, surface):
-        #pygame.draw.line(surface, (128, 128, 0), self.endpoint1.position, self.endpoint2.position, width=10)
-        draw_pipe(surface, gold_pipe_image, self.endpoint1.position, self.endpoint2.position)
-
+    def draw(self, surface, color=None):
+        if color is not None:
+            current_image = pipe_image.copy()
+            current_image.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
+        else:
+            current_image = gold_pipe_image.copy()
+        #pygame.draw.line(surface, (128, 64, 0), self.endpoint1.position, self.endpoint2.position, width=10)
+        draw_pipe(surface, current_image, self.endpoint1.position, self.endpoint2.position)
