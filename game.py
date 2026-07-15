@@ -188,35 +188,26 @@ class LevelSelectScene:
     def __init__(self):
         ui_manager.clear_and_reset()
 
-        self.btn_lv1 = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((200, 250), (150, 60)),
-            text='Level 1',
-            manager=ui_manager
-        )
-        self.btn_lv2 = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((450, 250), (150, 60)),
-            text='Level 2',
-            manager=ui_manager
-        )
+        level_config = {
+            1: ('Level 1', 'assets/levels/Level1/map.json'),
+            2: ('Level 2', 'assets/levels/Level2/map.json'),
+            3: ('Level 3', 'assets/levels/Level3/map.json'),
+        }
 
-        self.btn_lv3 = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((700, 250), (150, 60)),
-            text='Level 3',
-            manager=ui_manager
-        )
+        self.level_buttons = {}
+        for i, (text, path) in level_config.items():
+            btn = pygame_gui.elements.UIButton(
+                relative_rect=pygame.Rect((250 * i - 50, 250), (150, 60)),
+                text=text,
+                manager=ui_manager
+            )
+            self.level_buttons[btn] = {"level": i, "path": path}
 
     def handle_events(self, event):
-        global gamePath
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_lv1:
-                read_level('assets/levels/Level1/map.json')
-                return GameplayScene(level=1)
-            elif event.ui_element == self.btn_lv2:
-                read_level('assets/levels/Level2/map.json')
-                return GameplayScene(level=2)
-            elif event.ui_element == self.btn_lv3:
-                read_level('assets/levels/Level3/map.json')
-                return GameplayScene(level=3)
+            info = self.level_buttons[event.ui_element]
+            read_level(info["path"])
+            return GameplayScene(level=info["level"])
         return self
     
     def render(self, surface, frame: np.ndarray):
@@ -237,7 +228,7 @@ class GameplayScene:
     def handle_events(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_quit:
-                return StartScene()
+                return LevelSelectScene()
         return self
 
     def update(self, time_delta, frame: np.ndarray):
