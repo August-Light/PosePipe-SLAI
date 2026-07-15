@@ -19,7 +19,7 @@ def draw_pipe(surface, pipe_image, p1, p2):
     if dis == 0:
         return
 
-    pipe_thickness = 30 #pipe_image.get_width()
+    pipe_thickness = 30
     scaled_image = pygame.transform.scale(pipe_image, (pipe_thickness, dis))
     angle = degrees(atan2(-dy, dx)) - 90
     rotated_image = pygame.transform.rotate(scaled_image, angle)

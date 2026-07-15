@@ -6,14 +6,13 @@ import cv2
 import pygame
 import pygame_gui
 
-from entities import load_assets, PipeEnd, BodyEnd, Pipe, ExtraPipe
 from settings import *
+from entities import load_assets, PipeEnd, BodyEnd, Pipe, ExtraPipe
 import detect_yolo
 from graph_theory import valid_water_flow
 
 
 pygame.init()
-WIDTH, HEIGHT = 1920, 1080
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("GAME")
 clock = pygame.time.Clock()
@@ -22,6 +21,8 @@ ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
 load_assets()
 
+
+# =========== Tool functions ===========
 
 def surface_to_image(surface: pygame.Surface) -> np.ndarray:
     arr = pygame.surfarray.array3d(surface)
@@ -43,6 +44,8 @@ def make_rect(center, size):
     rect = pygame.Rect((0, 0), size)
     rect.center = center
     return rect
+
+# ======================================
 
 
 with open('assets/levels/Level1/map.json', 'r') as file:
@@ -230,7 +233,6 @@ class GameplayScene:
 
     def render(self, surface, frame: np.ndarray):
         surface.blit(image_to_surface(frame), (0, 0))
-        SUC_COLOR = (0,150,255)
         for pipe in pipes + extra_pipes:
             if level_done:
                 pipe.draw(surface, color=SUC_COLOR)
