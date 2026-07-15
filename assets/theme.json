@@ -1,0 +1,31 @@
+{
+    "defaults": {
+        "font": {
+            "name": "Minecraft",
+            "size": "100",
+            "regular_path": "assets/fonts/Minecraft.ttf"
+        }
+    },
+    "button": {
+        "font": {
+            "name": "Minecraft",
+            "size": "100"
+        },
+        "colours": {
+            "normal_bg": "#1e1e24",
+            "hovered_bg": "#2a2a35",
+            "active_bg": "#15151a",
+            "normal_text": "#e0e0e6",
+            "hovered_text": "#ffffff",
+            "active_text": "#ff974d",
+            "normal_border": "#ff7a22",
+            "hovered_border": "#ffa366"
+        },
+        "misc": {
+            "border_width": "2",
+            "shadow_width": "2",
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "6"
+        }
+    }
+}

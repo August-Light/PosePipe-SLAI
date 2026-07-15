@@ -17,7 +17,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("GAME")
 clock = pygame.time.Clock()
 
-ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT), "assets/theme.json")
 
 load_assets()
 
@@ -169,7 +169,7 @@ class StartScene:
         ui_manager.clear_and_reset()
 
         self.btn_start = pygame_gui.elements.UIButton(
-            relative_rect=make_rect(center=(WIDTH // 2, HEIGHT // 2), size=(150, 60)),
+            relative_rect=make_rect(center=(WIDTH // 2, HEIGHT // 2), size=(300, 120)),
             text='Start',
             manager=ui_manager
         )
@@ -189,15 +189,15 @@ class LevelSelectScene:
         ui_manager.clear_and_reset()
 
         level_config = {
-            1: ('Level 1', 'assets/levels/Level1/map.json'),
-            2: ('Level 2', 'assets/levels/Level2/map.json'),
-            3: ('Level 3', 'assets/levels/Level3/map.json'),
+            1: ('1', 'assets/levels/Level1/map.json'),
+            2: ('2', 'assets/levels/Level2/map.json'),
+            3: ('3', 'assets/levels/Level3/map.json'),
         }
 
         self.level_buttons = {}
         for i, (text, path) in level_config.items():
             btn = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect((250 * i - 50, 250), (150, 60)),
+                relative_rect=make_rect(center=(300 * i - 50, 250), size=(150, 150)),
                 text=text,
                 manager=ui_manager
             )
