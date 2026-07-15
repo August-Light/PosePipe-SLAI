@@ -5,10 +5,10 @@ from ultralytics import YOLO
 current_os = platform.system()
 if current_os == "Windows":
     print("Running on Windows")
-    model = YOLO("data/yolo26n-pose.pt")
+    model = YOLO("assets/models/yolo26n-pose.pt")
 elif current_os == "Darwin":
     print("Running on macOS")
-    model = YOLO("data/yolo26n-pose.mlpackage")
+    model = YOLO("assets/models/yolo26n-pose.mlpackage")
 
 def get_detect_result(frame, verbose=False):
     return model(frame, verbose=verbose)[0]

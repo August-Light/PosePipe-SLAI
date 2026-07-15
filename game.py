@@ -1,9 +1,13 @@
-from math import hypot, degrees, atan2
+import sys
+import json
+
 import numpy as np
 import cv2
 import pygame
-import json
+import pygame_gui
 
+from entities import load_assets, PipeEnd, BodyEnd, Pipe, ExtraPipe
+from settings import *
 import detect_yolo
 from graph_theory import valid_water_flow
 
@@ -12,6 +16,11 @@ pygame.init()
 WIDTH, HEIGHT = 1920, 1080
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("GAME")
+clock = pygame.time.Clock()
+
+ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+
+load_assets()
 
 
 def surface_to_image(surface: pygame.Surface) -> np.ndarray:
@@ -30,81 +39,93 @@ def distance(point1: np.ndarray, point2: np.ndarray) -> float:
     return np.linalg.norm(point1 - point2)
 
 
-pipe_image = pygame.image.load("img/pipe.png").convert_alpha()
-gold_pipe_image = pygame.image.load("img/gold_pipe.png").convert_alpha()
-def draw_pipe(surface, pipe_image, p1, p2):
-    dx = p2[0] - p1[0]
-    dy = p2[1] - p1[1]
-    dis = int(hypot(dx, dy))
-    
-    if dis == 0:
-        return
+class StartScene:
+    def __init__(self):
+        # 清空上一个界面的所有 UI 组件
+        ui_manager.clear_and_reset()
+        
+        # 创建“开始游戏”按钮
+        self.btn_start = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((300, 250), (200, 60)),
+            text='Start',
+            manager=ui_manager
+        )
 
-    pipe_thickness = 30 #pipe_image.get_width()
-    scaled_image = pygame.transform.scale(pipe_image, (pipe_thickness, dis))
-    angle = degrees(atan2(-dy, dx)) - 90
-    rotated_image = pygame.transform.rotate(scaled_image, angle)
-
-    rect = rotated_image.get_rect()
-    rect.center = ((p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2)
-    surface.blit(rotated_image, rect.topleft)
-
-
-THRESHOLD = 150
-
-class Endpoint:
-    def __init__(self, position, idx):
-        self.position = position
-        self.idx = idx
-
-        self.connected = False
-
-
-class PipeEnd(Endpoint):
-    def __init__(self, position, idx, allow_connect):
-        super().__init__(position, idx)
-        self.allow_connect = allow_connect
+    def handle_events(self, event):
+        # 监听 pygame_gui 的按钮点击事件
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_start:
+                return LevelSelectScene() # 切换到选关界面
+        return self
 
     def draw(self, surface):
-        if self.connected or not self.allow_connect:
-            pygame.draw.circle(surface, (0, 255, 0), self.position, radius=10)
-        else:
-            pygame.draw.circle(surface, (0, 255, 0), self.position, radius=THRESHOLD, width=1)
+        surface.fill((240, 240, 240))
 
 
-class BodyEnd(Endpoint):
-    def __init__(self, position, idx):
-        super().__init__(position, idx)
+class LevelSelectScene:
+    """选关界面"""
+    def __init__(self):
+        ui_manager.clear_and_reset()
+        
+        # 关卡 1 按钮
+        self.btn_lv1 = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((200, 250), (150, 60)),
+            text='Level 1',
+            manager=ui_manager
+        )
+        # 关卡 2 按钮
+        self.btn_lv2 = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((450, 250), (150, 60)),
+            text='Level 2',
+            manager=ui_manager
+        )
 
-    def draw(self, surface):
-        pygame.draw.circle(surface, (255, 0, 0), self.position, radius=10)
-
-
-class Connecter:
-    def __init__(self, endpoint1: Endpoint, endpoint2: Endpoint):
-        self.endpoint1 = endpoint1
-        self.endpoint2 = endpoint2
-
-
-class Pipe(Connecter):
-    def __init__(self, endpoint1, endpoint2):
-        super().__init__(endpoint1, endpoint2)
-
-    def draw(self, surface):
-        #pygame.draw.line(surface, (128, 64, 0), self.endpoint1.position, self.endpoint2.position, width=10)
-        draw_pipe(surface, pipe_image, self.endpoint1.position, self.endpoint2.position)
-
-
-class ExtraPipe(Connecter):
-    def __init__(self, endpoint1, endpoint2):
-        super().__init__(endpoint1, endpoint2)
+    def handle_events(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_lv1:
+                return GameplayScene(level=1)
+            elif event.ui_element == self.btn_lv2:
+                return GameplayScene(level=2)
+        return self
 
     def draw(self, surface):
-        #pygame.draw.line(surface, (128, 128, 0), self.endpoint1.position, self.endpoint2.position, width=10)
-        draw_pipe(surface, gold_pipe_image, self.endpoint1.position, self.endpoint2.position)
+        surface.fill((220, 230, 242))
 
 
-with open('levels/Level1/map.json', 'r') as file:
+class GameplayScene:
+    """游戏进行中界面"""
+    def __init__(self, level):
+        self.level = level
+        ui_manager.clear_and_reset()
+        
+        # 模拟游戏内的 UI：比如一个退出按钮
+        self.btn_quit = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((10, 10), (100, 40)),
+            text='Quit',
+            manager=ui_manager
+        )
+
+    def handle_events(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_quit:
+                return StartScene()
+        return self
+
+    def update(self, time_delta):
+        return self
+
+    def draw(self, surface):
+        surface.fill((30, 30, 30))
+
+        font = pygame.font.SysFont("SimHei", 30)
+        text = font.render(f"Playing Level {self.level} ... 3sec", True, (255, 255, 255))
+        surface.blit(text, (200, 250))
+
+
+
+
+
+with open('assets/levels/Level1/map.json', 'r') as file:
     data = json.load(file)
 
     pipe_ends = [PipeEnd(d["pos"], idx=d["id"], allow_connect=d["allow_connect"]) for d in data["Endpoints"]]
@@ -141,7 +162,7 @@ def build_neighbors():
     return neighbors
 
 
-VISIBILITY_THRESHOLD = 0.5
+
 def update(keypoints_list):
     global body_ends, extra_pipes
     body_ends = []
@@ -202,8 +223,6 @@ def update(keypoints_list):
             print("All pipes are filled with water! You win!")
         else:
             print("Not all pipes are filled with water.")
-                
-
 
 
 def render(surface, frame: np.ndarray):
@@ -212,7 +231,6 @@ def render(surface, frame: np.ndarray):
         pipe.draw(surface)
     for pipe_end in pipe_ends + body_ends:
         pipe_end.draw(surface)
-    pygame.display.flip()
 
 
 camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
@@ -227,13 +245,21 @@ def grab_frame():
     frame = cv2.flip(frame, 1)
     return frame
 
-clock = pygame.time.Clock()
-running = True
 
-while running:
+current_scene = StartScene()
+
+while True:
+    time_delta = clock.tick(30) / 1000.0
+    current_fps = clock.get_fps()
+    # print(f"Current FPS: {current_fps:.2f}")
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            pygame.quit()
+            sys.exit()
+
+        ui_manager.process_events(event)
+        current_scene = current_scene.handle_events(event)
 
     frame = grab_frame()
     if frame is None:
@@ -241,12 +267,15 @@ while running:
 
     detect_result = detect_yolo.get_detect_result(frame)
     keypoints_list = get_keypoints(detect_result)
+
+    if hasattr(current_scene, 'update'):
+        current_scene = current_scene.update(time_delta)
+    ui_manager.update(time_delta)
+
+
     update(keypoints_list)
     detect_yolo.plot_result(frame, detect_result)
     render(screen, frame)
+    ui_manager.draw_ui(screen)
+    pygame.display.flip()
 
-    clock.tick(30)
-    current_fps = clock.get_fps()
-    # print(f"Current FPS: {current_fps:.2f}")
-
-pygame.quit()
