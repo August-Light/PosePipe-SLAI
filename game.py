@@ -39,90 +39,10 @@ def distance(point1: np.ndarray, point2: np.ndarray) -> float:
     return np.linalg.norm(point1 - point2)
 
 
-class StartScene:
-    def __init__(self):
-        # 清空上一个界面的所有 UI 组件
-        ui_manager.clear_and_reset()
-        
-        # 创建“开始游戏”按钮
-        self.btn_start = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((300, 250), (200, 60)),
-            text='Start',
-            manager=ui_manager
-        )
-
-    def handle_events(self, event):
-        # 监听 pygame_gui 的按钮点击事件
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_start:
-                return LevelSelectScene() # 切换到选关界面
-        return self
-
-    def draw(self, surface):
-        surface.fill((240, 240, 240))
-
-
-class LevelSelectScene:
-    """选关界面"""
-    def __init__(self):
-        ui_manager.clear_and_reset()
-        
-        # 关卡 1 按钮
-        self.btn_lv1 = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((200, 250), (150, 60)),
-            text='Level 1',
-            manager=ui_manager
-        )
-        # 关卡 2 按钮
-        self.btn_lv2 = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((450, 250), (150, 60)),
-            text='Level 2',
-            manager=ui_manager
-        )
-
-    def handle_events(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_lv1:
-                return GameplayScene(level=1)
-            elif event.ui_element == self.btn_lv2:
-                return GameplayScene(level=2)
-        return self
-
-    def draw(self, surface):
-        surface.fill((220, 230, 242))
-
-
-class GameplayScene:
-    """游戏进行中界面"""
-    def __init__(self, level):
-        self.level = level
-        ui_manager.clear_and_reset()
-        
-        # 模拟游戏内的 UI：比如一个退出按钮
-        self.btn_quit = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((10, 10), (100, 40)),
-            text='Quit',
-            manager=ui_manager
-        )
-
-    def handle_events(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_quit:
-                return StartScene()
-        return self
-
-    def update(self, time_delta):
-        return self
-
-    def draw(self, surface):
-        surface.fill((30, 30, 30))
-
-        font = pygame.font.SysFont("SimHei", 30)
-        text = font.render(f"Playing Level {self.level} ... 3sec", True, (255, 255, 255))
-        surface.blit(text, (200, 250))
-
-
-
+def make_rect(center, size):
+    rect = pygame.Rect((0, 0), size)
+    rect.center = center
+    return rect
 
 
 with open('assets/levels/Level1/map.json', 'r') as file:
@@ -133,7 +53,6 @@ with open('assets/levels/Level1/map.json', 'r') as file:
 
     body_ends = []
     extra_pipes = []
-
 
 
 def get_keypoints(detect_result):
@@ -162,8 +81,11 @@ def build_neighbors():
     return neighbors
 
 
+def update(frame):
+    detect_result = detect_yolo.get_detect_result(frame)
+    keypoints_list = get_keypoints(detect_result)
+    detect_yolo.plot_result(frame, detect_result)
 
-def update(keypoints_list):
     global body_ends, extra_pipes
     body_ends = []
     extra_pipes = []
@@ -202,7 +124,6 @@ def update(keypoints_list):
             left_a = current_person_ends["left_ankle"]
             right_a = current_person_ends["right_ankle"]
             extra_pipes.append(ExtraPipe(left_a, right_a))
-            
 
 
     neighbors = build_neighbors()
@@ -225,17 +146,10 @@ def update(keypoints_list):
             print("Not all pipes are filled with water.")
 
 
-def render(surface, frame: np.ndarray):
-    surface.blit(image_to_surface(frame), (0, 0))
-    for pipe in pipes + extra_pipes:
-        pipe.draw(surface)
-    for pipe_end in pipe_ends + body_ends:
-        pipe_end.draw(surface)
-
-
 camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
+
 
 def grab_frame():
     success, frame = camera.read()
@@ -244,6 +158,82 @@ def grab_frame():
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     frame = cv2.flip(frame, 1)
     return frame
+
+
+class StartScene:
+    def __init__(self):
+        ui_manager.clear_and_reset()
+
+        self.btn_start = pygame_gui.elements.UIButton(
+            relative_rect=make_rect(center=(WIDTH // 2, HEIGHT // 2), size=(150, 60)),
+            text='Start',
+            manager=ui_manager
+        )
+
+    def handle_events(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_start:
+                return LevelSelectScene()
+        return self
+
+    def render(self, surface, frame: np.ndarray):
+        surface.fill((240, 240, 240))
+
+
+class LevelSelectScene:
+    def __init__(self):
+        ui_manager.clear_and_reset()
+
+        self.btn_lv1 = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((200, 250), (150, 60)),
+            text='Level 1',
+            manager=ui_manager
+        )
+        self.btn_lv2 = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((450, 250), (150, 60)),
+            text='Level 2',
+            manager=ui_manager
+        )
+
+    def handle_events(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_lv1:
+                return GameplayScene(level=1)
+            elif event.ui_element == self.btn_lv2:
+                return GameplayScene(level=2)
+        return self
+
+    def render(self, surface, frame: np.ndarray):
+        surface.fill((220, 230, 242))
+
+
+class GameplayScene:
+    def __init__(self, level):
+        self.level = level
+        ui_manager.clear_and_reset()
+
+        self.btn_quit = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((10, 10), (100, 40)),
+            text='Quit',
+            manager=ui_manager
+        )
+
+    def handle_events(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_quit:
+                return StartScene()
+        return self
+
+    def update(self, time_delta, frame: np.ndarray):
+        update(frame)
+        return self
+
+    def render(self, surface, frame: np.ndarray):
+        surface.blit(image_to_surface(frame), (0, 0))
+        for pipe in pipes + extra_pipes:
+            pipe.draw(surface)
+        for pipe_end in pipe_ends + body_ends:
+            pipe_end.draw(surface)
 
 
 current_scene = StartScene()
@@ -265,17 +255,16 @@ while True:
     if frame is None:
         break
 
-    detect_result = detect_yolo.get_detect_result(frame)
-    keypoints_list = get_keypoints(detect_result)
+    
 
     if hasattr(current_scene, 'update'):
-        current_scene = current_scene.update(time_delta)
+        current_scene = current_scene.update(time_delta, frame)
     ui_manager.update(time_delta)
 
 
-    update(keypoints_list)
-    detect_yolo.plot_result(frame, detect_result)
-    render(screen, frame)
+    update(frame)
+    
+    current_scene.render(screen, frame)
     ui_manager.draw_ui(screen)
     pygame.display.flip()
 
