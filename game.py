@@ -21,7 +21,7 @@ clock = pygame.time.Clock()
 ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
 load_assets()
-
+gamePath = 'assets/levels/Level1/map.json'
 
 def surface_to_image(surface: pygame.Surface) -> np.ndarray:
     arr = pygame.surfarray.array3d(surface)
@@ -44,15 +44,16 @@ def make_rect(center, size):
     rect.center = center
     return rect
 
+def read_level(gamePath):
+    global pipe_ends,pipes,body_ends,extra_pipes
+    with open(gamePath, 'r') as file:
+        data = json.load(file)
 
-with open('assets/levels/Level1/map.json', 'r') as file:
-    data = json.load(file)
+        pipe_ends = [PipeEnd(d["pos"], idx=d["id"], allow_connect=d["allow_connect"]) for d in data["Endpoints"]]
+        pipes = [Pipe(pipe_ends[u], pipe_ends[v]) for u, v in data["Pipes"]]
 
-    pipe_ends = [PipeEnd(d["pos"], idx=d["id"], allow_connect=d["allow_connect"]) for d in data["Endpoints"]]
-    pipes = [Pipe(pipe_ends[u], pipe_ends[v]) for u, v in data["Pipes"]]
-
-    body_ends = []
-    extra_pipes = []
+        body_ends = []
+        extra_pipes = []
 
 
 def build_neighbors():
@@ -195,14 +196,26 @@ class LevelSelectScene:
             manager=ui_manager
         )
 
+        self.btn_lv3 = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((700, 250), (150, 60)),
+            text='Level 3',
+            manager=ui_manager
+        )
+
     def handle_events(self, event):
+        global gamePath
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_lv1:
+                read_level('assets/levels/Level1/map.json')
                 return GameplayScene(level=1)
             elif event.ui_element == self.btn_lv2:
+                read_level('assets/levels/Level2/map.json')
                 return GameplayScene(level=2)
+            elif event.ui_element == self.btn_lv3:
+                read_level('assets/levels/Level3/map.json')
+                return GameplayScene(level=3)
         return self
-
+    
     def render(self, surface, frame: np.ndarray):
         surface.fill((220, 230, 242))
 
