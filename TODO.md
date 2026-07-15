@@ -1,0 +1,6 @@
+- Remove .DS_Store using .gitignore
+- Adjust color when initializing
+- Level selecting config
+- Improve UI
+  - Improve water render
+- More levels
