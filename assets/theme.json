@@ -6,6 +6,15 @@
             "regular_path": "assets/fonts/Minecraft.ttf"
         }
     },
+    "label": {
+        "font": {
+            "name": "Minecraft",
+            "size": "100"
+        },
+        "colours": {
+            "normal_text": "#000000"
+        }
+    },
     "button": {
         "font": {
             "name": "Minecraft",

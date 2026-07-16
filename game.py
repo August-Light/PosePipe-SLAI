@@ -193,10 +193,14 @@ class LevelSelectScene:
             3: ('3', 'assets/levels/Level3/map.json'),
         }
 
+        pygame_gui.elements.UILabel(
+            relative_rect=make_rect(center=(960, 250), size=(800, 100)), text="Select Level", manager=ui_manager
+        )
+
         self.level_buttons = {}
         for i, (text, path) in level_config.items():
             btn = pygame_gui.elements.UIButton(
-                relative_rect=make_rect(center=(300 * i - 50, 250), size=(150, 150)),
+                relative_rect=make_rect(center=(300 * i - 50, 500), size=(150, 150)),
                 text=text,
                 manager=ui_manager,
                 object_id="#level_button"
