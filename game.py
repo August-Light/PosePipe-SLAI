@@ -171,7 +171,8 @@ class StartScene:
         self.btn_start = pygame_gui.elements.UIButton(
             relative_rect=make_rect(center=(WIDTH // 2, HEIGHT // 2), size=(300, 120)),
             text='Start',
-            manager=ui_manager
+            manager=ui_manager,
+            object_id="#start_button"
         )
 
     def handle_events(self, event):
@@ -199,7 +200,8 @@ class LevelSelectScene:
             btn = pygame_gui.elements.UIButton(
                 relative_rect=make_rect(center=(300 * i - 50, 250), size=(150, 150)),
                 text=text,
-                manager=ui_manager
+                manager=ui_manager,
+                object_id="#level_button"
             )
             self.level_buttons[btn] = {"level": i, "path": path}
 
@@ -222,7 +224,8 @@ class GameplayScene:
         self.btn_quit = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((10, 10), (100, 40)),
             text='Quit',
-            manager=ui_manager
+            manager=ui_manager,
+            object_id="#quit_button"
         )
 
     def handle_events(self, event):
@@ -247,6 +250,8 @@ class GameplayScene:
 
 
 current_scene = StartScene()
+
+detect_yolo.get_detect_result(grab_frame()) # Initialize YOLO by running once
 
 while True:
     time_delta = clock.tick(30) / 1000.0
