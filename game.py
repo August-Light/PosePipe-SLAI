@@ -138,8 +138,7 @@ def update(frame):
 
                 elapsed_time = pygame.time.get_ticks() - start_ticks
                 if elapsed_time >= HOLD_TIME_MS:
-                    print('yes')
-                    if not pygame.mixer.get_busy():
+                    if not level_done:
                         pygame.mixer.music.load('assets/sound/orb.mp3')
                         pygame.mixer.music.play()
                     level_done = True
