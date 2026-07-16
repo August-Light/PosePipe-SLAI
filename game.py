@@ -1,5 +1,6 @@
 import sys
 import json
+from datetime import datetime
 
 import numpy as np
 import cv2
@@ -57,6 +58,8 @@ def read_level(gamePath):
         body_ends = []
         extra_pipes = []
 
+    pipe_ends[0].special = pipe_ends[-1].special = True
+
 
 def build_neighbors():
     n = len(pipe_ends) + len(body_ends)
@@ -74,7 +77,7 @@ level_done = False
 def update(frame):
     detect_result = detect_yolo.get_detect_result(frame)
     keypoints_list = detect_yolo.get_keypoints(detect_result)
-    detect_yolo.plot_result(frame, detect_result)
+    #detect_yolo.plot_result(frame, detect_result)
 
     global body_ends, extra_pipes
     body_ends = []
@@ -132,23 +135,22 @@ def update(frame):
                 break
         
         if all_water:
+            current_ticks = pygame.time.get_ticks()
             if start_ticks is None:
-                start_ticks = pygame.time.get_ticks()
+                start_ticks = current_ticks
             else:
-
-                elapsed_time = pygame.time.get_ticks() - start_ticks
+                elapsed_time = current_ticks - start_ticks
                 if elapsed_time >= HOLD_TIME_MS:
                     if not level_done:
                         pygame.mixer.music.load('assets/sound/orb.mp3')
                         pygame.mixer.music.play()
                     level_done = True
-                    start_ticks = pygame.time.get_ticks()
+                    start_ticks = current_ticks
         else:
             start_ticks = None
-            level_done = False
     else:
         start_ticks = None
-        level_done = False
+
 
 camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
@@ -172,7 +174,7 @@ class StartScene:
             relative_rect=make_rect(center=(WIDTH // 2, HEIGHT // 2), size=(300, 120)),
             text='Start',
             manager=ui_manager,
-            object_id="#start_button"
+            object_id="#big_button"
         )
 
     def handle_events(self, event):
@@ -189,30 +191,26 @@ class LevelSelectScene:
     def __init__(self):
         ui_manager.clear_and_reset()
 
-        level_config = {
-            1: ('1', 'assets/levels/Level1/map.json'),
-            2: ('2', 'assets/levels/Level2/map.json'),
-            3: ('3', 'assets/levels/Level3/map.json'),
-        }
-
         pygame_gui.elements.UILabel(
-            relative_rect=make_rect(center=(960, 250), size=(800, 100)), text="Select Level", manager=ui_manager
+            relative_rect=make_rect(center=(WIDTH // 2, 250), size=(800, 100)), text="Select Level", manager=ui_manager
         )
 
         self.level_buttons = {}
-        for i, (text, path) in level_config.items():
+        for i in range(1, NUM_LEVELS + 1):
             btn = pygame_gui.elements.UIButton(
                 relative_rect=make_rect(center=(300 * i - 50, 500), size=(150, 150)),
-                text=text,
+                text=str(i),
                 manager=ui_manager,
                 object_id="#level_button"
             )
-            self.level_buttons[btn] = {"level": i, "path": path}
+            self.level_buttons[btn] = {"level": i, "path": f"assets/levels/Level{i}.json"}
 
     def handle_events(self, event):
+        global level_done
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             info = self.level_buttons[event.ui_element]
             read_level(info["path"])
+            level_done = False
             return GameplayScene(level=info["level"])
         return self
     
@@ -221,7 +219,6 @@ class LevelSelectScene:
 
 
 class GameplayScene:
-    global level_done
     def __init__(self, level):
         self.level = level
         ui_manager.clear_and_reset()
@@ -234,15 +231,50 @@ class GameplayScene:
         )
 
     def handle_events(self, event):
-        global level_done
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_quit:
-                level_done = False
                 return LevelSelectScene()
         return self
 
     def update(self, time_delta, frame: np.ndarray):
         update(frame)
+        if level_done:
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            filename = f"screenshots/screenshot_{timestamp}.png"
+            
+            # Save the image with the unique name
+            pygame.image.save(screen, filename)
+            return WinScene()
+        return self
+
+    def render(self, surface, frame: np.ndarray):
+        surface.blit(image_to_surface(frame), (0, 0))
+        for pipe in pipes + extra_pipes:
+            pipe.draw(surface, water=level_done)
+        for pipe_end in pipe_ends + body_ends:
+            pipe_end.draw(surface)
+
+
+class WinScene:
+    def __init__(self):
+        ui_manager.clear_and_reset()
+
+        pygame_gui.elements.UILabel(
+            relative_rect=make_rect(center=(WIDTH // 2, 250), size=(800, 100)), text="You Win!", manager=ui_manager
+        )
+
+        self.btn_return = pygame_gui.elements.UIButton(
+            relative_rect=make_rect(center=(WIDTH // 2, 700), size=(600, 120)),
+            text='Return',
+            manager=ui_manager,
+            object_id="#big_button"
+        )
+
+    def handle_events(self, event):
+        global level_done
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_return:
+                return LevelSelectScene()
         return self
 
     def render(self, surface, frame: np.ndarray):
@@ -269,7 +301,6 @@ while True:
 
         ui_manager.process_events(event)
         current_scene = current_scene.handle_events(event)
-        print(level_done)
 
     frame = grab_frame()
     if frame is None:

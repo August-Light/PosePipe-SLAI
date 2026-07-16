@@ -55,12 +55,16 @@ class Endpoint:
 
 
 class PipeEnd(Endpoint):
-    def __init__(self, position, idx, allow_connect):
+    def __init__(self, position, idx, allow_connect=True, special=False):
         super().__init__(position, idx)
         self.allow_connect = allow_connect
+        self.special = special
 
     def draw(self, surface):
-        if not self.allow_connect:
+        if self.special:
+            pygame.draw.circle(surface, (255, 255, 0), self.position, radius=20)
+            pygame.draw.circle(surface, (255, 255, 0), self.position, radius=25, width=3)
+        elif not self.allow_connect:
             #pygame.draw.circle(surface, (0, 255, 0), self.position, radius=10)
             pygame.draw.circle(surface, (255, 0, 0), self.position, radius=20)
         elif self.connected:
