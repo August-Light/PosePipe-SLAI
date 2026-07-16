@@ -4,7 +4,7 @@
         {"id": 1, "pos": [600, 640], "allow_connect": true},
         
         {"id": 2, "pos": [1300, 200], "allow_connect": true},
-        {"id": 3, "pos": [1800, 100], "allow_connect": false}
+        {"id": 3, "pos": [1800, 200], "allow_connect": false}
 
     ],
     "Pipes": [

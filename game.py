@@ -313,6 +313,3 @@ while True:
     current_scene.render(screen, frame)
     ui_manager.draw_ui(screen)
     pygame.display.flip()
-    
-
-

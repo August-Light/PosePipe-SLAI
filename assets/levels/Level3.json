@@ -1,11 +1,11 @@
 {
     "Endpoints": [
-        {"id": 0, "pos": [100, 100], "allow_connect": false},
-        {"id": 1, "pos": [500, 100], "allow_connect": true},
-        {"id": 2, "pos": [1300, 200], "allow_connect": true},
-        {"id": 3, "pos": [700, 800], "allow_connect": true},
-        {"id": 4, "pos": [1200, 950], "allow_connect": true},
-        {"id": 5, "pos": [1750, 950], "allow_connect": false}
+        {"id": 0, "pos": [500, 100], "allow_connect": false},
+        {"id": 1, "pos": [500, 900], "allow_connect": true},
+        {"id": 2, "pos": [1100, 900], "allow_connect": true},
+        {"id": 3, "pos": [1400, 900], "allow_connect": true},
+        {"id": 4, "pos": [800, 900], "allow_connect": true},
+        {"id": 5, "pos": [800, 100], "allow_connect": false}
     ],
     "Pipes": [
         [0, 1],
