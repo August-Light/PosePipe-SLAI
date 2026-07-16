@@ -33,6 +33,19 @@ def draw_pipe(surface, pipe_image, p1, p2):
     surface.blit(rotated_image, rect.topleft)
 
 
+def draw_transparent_circle(surface, color, center, radius, alpha):
+    diameter = radius * 2
+    circle_surface = pygame.Surface((diameter, diameter), pygame.SRCALPHA)
+
+    pygame.draw.circle(circle_surface, color, (radius, radius), radius)
+
+    circle_surface.set_alpha(alpha)
+
+    top_left_x = center[0] - radius
+    top_left_y = center[1] - radius
+    surface.blit(circle_surface, (top_left_x, top_left_y))
+
+
 class Endpoint:
     def __init__(self, position, idx):
         self.position = position
@@ -47,10 +60,15 @@ class PipeEnd(Endpoint):
         self.allow_connect = allow_connect
 
     def draw(self, surface):
-        if self.connected or not self.allow_connect:
-            pygame.draw.circle(surface, (0, 255, 0), self.position, radius=10)
+        if not self.allow_connect:
+            #pygame.draw.circle(surface, (0, 255, 0), self.position, radius=10)
+            pygame.draw.circle(surface, (255, 0, 0), self.position, radius=20)
+        elif self.connected:
+            pygame.draw.circle(surface, (255, 255, 255), self.position, radius=20)
         else:
-            pygame.draw.circle(surface, (0, 255, 0), self.position, radius=THRESHOLD, width=1)
+            draw_transparent_circle(surface, (128, 128, 255), self.position, radius=THRESHOLD, alpha=64)
+            pygame.draw.circle(surface, (128, 128, 128), self.position, radius=20)
+        pygame.draw.circle(surface, (0, 0, 0), self.position, radius=20, width=5)
 
 
 class BodyEnd(Endpoint):
@@ -58,7 +76,9 @@ class BodyEnd(Endpoint):
         super().__init__(position, idx)
 
     def draw(self, surface):
-        pygame.draw.circle(surface, (255, 0, 0), self.position, radius=10)
+        #pygame.draw.circle(surface, (255, 0, 0), self.position, radius=10)
+        pygame.draw.circle(surface, (232, 202, 179), self.position, radius=20)
+        pygame.draw.circle(surface, (0, 0, 0), self.position, radius=20, width=5)
 
 
 class Connecter:
