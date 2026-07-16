@@ -216,6 +216,7 @@ class LevelSelectScene:
 
 
 class GameplayScene:
+    global level_done
     def __init__(self, level):
         self.level = level
         ui_manager.clear_and_reset()
@@ -228,8 +229,10 @@ class GameplayScene:
         )
 
     def handle_events(self, event):
+        global level_done
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_quit:
+                level_done = False
                 return LevelSelectScene()
         return self
 
@@ -261,6 +264,7 @@ while True:
 
         ui_manager.process_events(event)
         current_scene = current_scene.handle_events(event)
+        print(level_done)
 
     frame = grab_frame()
     if frame is None:
