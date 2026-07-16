@@ -145,8 +145,10 @@ def update(frame):
                     start_ticks = pygame.time.get_ticks()
         else:
             start_ticks = None
+            level_done = False
     else:
         start_ticks = None
+        level_done = False
 
 camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
