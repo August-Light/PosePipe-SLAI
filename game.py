@@ -11,7 +11,6 @@ from entities import load_assets, PipeEnd, BodyEnd, Pipe, ExtraPipe
 import detect_yolo
 from graph_theory import valid_water_flow
 
-
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("GAME")
@@ -133,7 +132,6 @@ def update(frame):
                 break
         
         if all_water:
-            print("All pipes are filled with water!")
             if start_ticks is None:
                 start_ticks = pygame.time.get_ticks()
             else:
@@ -141,14 +139,15 @@ def update(frame):
                 elapsed_time = pygame.time.get_ticks() - start_ticks
                 if elapsed_time >= HOLD_TIME_MS:
                     print('yes')
+                    if not pygame.mixer.get_busy():
+                        pygame.mixer.music.load('assets/sound/orb.mp3')
+                        pygame.mixer.music.play()
                     level_done = True
                     start_ticks = pygame.time.get_ticks()
         else:
-            print("Not all pipes are filled with water.")
             start_ticks = None
     else:
         start_ticks = None
-
 
 camera = cv2.VideoCapture(0)  # 0 is usually the default built-in webcam
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
@@ -272,4 +271,6 @@ while True:
     current_scene.render(screen, frame)
     ui_manager.draw_ui(screen)
     pygame.display.flip()
+    
+
 
