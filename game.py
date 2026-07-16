@@ -240,10 +240,7 @@ class GameplayScene:
     def render(self, surface, frame: np.ndarray):
         surface.blit(image_to_surface(frame), (0, 0))
         for pipe in pipes + extra_pipes:
-            if level_done:
-                pipe.draw(surface, color=SUC_COLOR)
-            else:
-                pipe.draw(surface)
+            pipe.draw(surface, water=level_done)
         for pipe_end in pipe_ends + body_ends:
             pipe_end.draw(surface)
 

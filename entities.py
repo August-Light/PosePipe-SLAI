@@ -1,14 +1,18 @@
 import pygame
 from math import hypot, degrees, atan2
 
-from settings import THRESHOLD
+from settings import THRESHOLD, WATER_COLOR
 
 pipe_image = None
 gold_pipe_image = None
+water_pipe_image = None
 def load_assets():
-    global pipe_image, gold_pipe_image
+    global pipe_image, gold_pipe_image, water_pipe_image
     pipe_image = pygame.image.load("assets/images/pipe.png").convert_alpha()
     gold_pipe_image = pygame.image.load("assets/images/gold_pipe.png").convert_alpha()
+
+    water_pipe_image = pipe_image.copy()
+    water_pipe_image.fill(WATER_COLOR, special_flags=pygame.BLEND_RGBA_MULT)
 
 
 def draw_pipe(surface, pipe_image, p1, p2):
@@ -67,22 +71,13 @@ class Pipe(Connecter):
     def __init__(self, endpoint1, endpoint2):
         super().__init__(endpoint1, endpoint2)
 
-    def draw(self, surface, color=None):
-        current_image = pipe_image.copy()
-        if color is not None:
-            current_image.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
-        draw_pipe(surface, current_image, self.endpoint1.position, self.endpoint2.position)
+    def draw(self, surface, water=False):
+        draw_pipe(surface, water_pipe_image if water else pipe_image, self.endpoint1.position, self.endpoint2.position)
 
 
 class ExtraPipe(Connecter):
     def __init__(self, endpoint1, endpoint2):
         super().__init__(endpoint1, endpoint2)
 
-    def draw(self, surface, color=None):
-        if color is not None:
-            current_image = pipe_image.copy()
-            current_image.fill(color, special_flags=pygame.BLEND_RGBA_MULT)
-        else:
-            current_image = gold_pipe_image.copy()
-        #pygame.draw.line(surface, (128, 64, 0), self.endpoint1.position, self.endpoint2.position, width=10)
-        draw_pipe(surface, current_image, self.endpoint1.position, self.endpoint2.position)
+    def draw(self, surface, water=False):
+        draw_pipe(surface, water_pipe_image if water else gold_pipe_image, self.endpoint1.position, self.endpoint2.position)
