@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 from datetime import datetime
@@ -58,7 +59,7 @@ def read_level(gamePath):
         body_ends = []
         extra_pipes = []
 
-    pipe_ends[0].special = pipe_ends[-1].special = True
+    pipe_ends[0].special = pipe_ends[-1].special = True # start and end
 
 
 def build_neighbors():
@@ -242,7 +243,7 @@ class GameplayScene:
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             filename = f"screenshots/screenshot_{timestamp}.png"
             
-            # Save the image with the unique name
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
             pygame.image.save(screen, filename)
             return WinScene()
         return self

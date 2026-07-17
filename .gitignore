@@ -3,5 +3,7 @@
 .DS_Store
 
 tempCodeRunnerFile.py
+.venv/
+*.code-workspace
 
 screenshots/

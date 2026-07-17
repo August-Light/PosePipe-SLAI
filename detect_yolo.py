@@ -1,13 +1,10 @@
-import platform
+from settings import PLATFORM
 from ultralytics import YOLO
 
 
-current_os = platform.system()
-if current_os == "Windows":
-    print("Running on Windows")
+if PLATFORM == "Windows":
     model = YOLO("assets/models/yolo26n-pose.pt")
-elif current_os == "Darwin":
-    print("Running on macOS")
+elif PLATFORM == "Darwin":
     model = YOLO("assets/models/yolo26n-pose.mlpackage")
 
 
@@ -31,7 +28,7 @@ def get_keypoints(detect_result):
 
 # ==========================
 
-
+"""
 import cv2
 
 # AI gen
@@ -65,3 +62,4 @@ def plot_result(frame, result):
             if confidences[idx] > 0.5:
                 cx, cy = int(x), int(y)
                 cv2.circle(frame, (cx, cy), 4, (0, 0, 255), -1) # Red dots
+"""
