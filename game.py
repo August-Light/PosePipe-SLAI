@@ -199,9 +199,10 @@ class LevelSelectScene:
         )
 
         self.level_buttons = {}
+        BUTTON_INTERVAL = 300 if PLATFORM == "Darwin" else 100
         for i in range(1, NUM_LEVELS + 1):
             btn = pygame_gui.elements.UIButton(
-                relative_rect=make_rect(center=(300 * i - 50, 500), size=(150, 150)),
+                relative_rect=make_rect(center=(WIDTH // 2 + BUTTON_INTERVAL * (i - 3) - BUTTON_INTERVAL // 2, 500), size=(150, 150)),
                 text=str(i),
                 manager=ui_manager,
                 object_id="#level_button"
