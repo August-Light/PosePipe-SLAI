@@ -12,6 +12,7 @@ from settings import *
 from entities import load_assets, PipeEnd, BodyEnd, Pipe, ExtraPipe
 import detect_yolo
 from graph_theory import valid_water_flow
+from image_displayer import display_image
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -247,6 +248,9 @@ class GameplayScene:
             
             os.makedirs(os.path.dirname(filename), exist_ok=True)
             pygame.image.save(screen, filename)
+
+            display_image()
+
             return WinScene()
         return self
 
