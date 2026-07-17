@@ -61,6 +61,11 @@ def read_level(gamePath):
 
     pipe_ends[0].special = pipe_ends[-1].special = True # start and end
 
+    if PLATFORM == "Windows":
+        for pipe_end in pipe_ends:
+            pipe_end.position[0] *= 960 / 1920
+            pipe_end.position[1] *= 540 / 1080
+
 
 def build_neighbors():
     n = len(pipe_ends) + len(body_ends)
@@ -193,16 +198,19 @@ class LevelSelectScene:
         ui_manager.clear_and_reset()
 
         pygame_gui.elements.UILabel(
-            relative_rect=make_rect(center=(WIDTH // 2, 250), size=(800, 200)),
+            relative_rect=make_rect(center=(WIDTH // 2, 250 if PLATFORM == "Darwin" else 150), size=(800, 200)),
             text="Select Level", manager=ui_manager,
             object_id="#select_level_label"
         )
 
         self.level_buttons = {}
-        BUTTON_INTERVAL = 300 if PLATFORM == "Darwin" else 100
+        BUTTON_INTERVAL = 300 if PLATFORM == "Darwin" else 150
         for i in range(1, NUM_LEVELS + 1):
             btn = pygame_gui.elements.UIButton(
-                relative_rect=make_rect(center=(WIDTH // 2 + BUTTON_INTERVAL * (i - 3) - BUTTON_INTERVAL // 2, 500), size=(150, 150)),
+                relative_rect=make_rect(
+                    center=(WIDTH // 2 + BUTTON_INTERVAL * (i - 3) - BUTTON_INTERVAL // 2, 
+                            500 if PLATFORM == "Darwin" else 300),
+                    size=(150, 150)),
                 text=str(i),
                 manager=ui_manager,
                 object_id="#level_button"
@@ -264,12 +272,12 @@ class WinScene:
         ui_manager.clear_and_reset()
 
         pygame_gui.elements.UILabel(
-            relative_rect=make_rect(center=(WIDTH // 2, 250), size=(800, 200)),
+            relative_rect=make_rect(center=(WIDTH // 2, 250 if PLATFORM == "Darwin" else 200), size=(800, 200)),
             text="You Win!", manager=ui_manager
         )
 
         self.btn_return = pygame_gui.elements.UIButton(
-            relative_rect=make_rect(center=(WIDTH // 2, 700), size=(600, 120)),
+            relative_rect=make_rect(center=(WIDTH // 2, 700 if PLATFORM == "Darwin" else 400), size=(600, 120)),
             text='Return',
             manager=ui_manager,
             object_id="#big_button"
