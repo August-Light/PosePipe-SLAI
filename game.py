@@ -12,7 +12,6 @@ from settings import *
 from entities import load_assets, PipeEnd, BodyEnd, Pipe, ExtraPipe
 import detect_yolo
 from graph_theory import valid_water_flow
-from image_displayer import display_image
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -231,6 +230,44 @@ class LevelSelectScene:
         surface.fill((220, 230, 242))
 
 
+class FlashEffect:
+    def __init__(self, duration_s):
+        self.duration = duration_s
+        self.timer = 0
+        self.is_active = False
+
+        self.flash_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        self.flash_surface.fill((255, 255, 255))
+
+    def trigger(self):
+        self.timer = 0
+        self.is_active = True
+
+    def update(self, dt):
+        if not self.is_active:
+            return
+
+        self.timer += dt
+        if self.timer >= self.duration:
+            self.is_active = False
+            return
+
+        progress = self.timer / self.duration
+        if progress < 0.5:
+            alpha = (progress / 0.5) * 255
+        else:
+            alpha = (1.0 - (progress - 0.5) / 0.5) * 255
+
+        #print(alpha)
+        self.flash_surface.set_alpha(int(alpha))
+
+    def draw(self, surface):
+        if self.is_active:
+            surface.blit(self.flash_surface, (0, 0))
+
+flash = FlashEffect(0.8)
+
+
 class GameplayScene:
     def __init__(self, level):
         self.level = level
@@ -258,7 +295,7 @@ class GameplayScene:
             os.makedirs(os.path.dirname(filename), exist_ok=True)
             pygame.image.save(screen, filename)
 
-            display_image()
+            flash.trigger()
 
             return WinScene()
         return self
@@ -315,6 +352,10 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                print("flash")
+                flash.trigger()
 
         ui_manager.process_events(event)
         current_scene = current_scene.handle_events(event)
@@ -326,7 +367,9 @@ while True:
     if hasattr(current_scene, 'update'):
         current_scene = current_scene.update(time_delta, frame)
     ui_manager.update(time_delta)
+    flash.update(time_delta)
     
     current_scene.render(screen, frame)
     ui_manager.draw_ui(screen)
+    flash.draw(screen)
     pygame.display.flip()
