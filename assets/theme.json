@@ -12,6 +12,22 @@
             "size": "100"
         },
         "colours": {
+            "normal_text": "#ffffff",
+            "text_shadow": "#000000"
+        },
+        "misc":
+         {
+             "text_shadow": "1",
+             "text_shadow_size": "1",
+             "text_shadow_offset": "0,0"
+         }
+    },
+    "#select_level_label": {
+        "font": {
+            "name": "Minecraft",
+            "size": "100"
+        },
+        "colours": {
             "normal_text": "#000000"
         }
     },

@@ -193,7 +193,9 @@ class LevelSelectScene:
         ui_manager.clear_and_reset()
 
         pygame_gui.elements.UILabel(
-            relative_rect=make_rect(center=(WIDTH // 2, 250), size=(800, 100)), text="Select Level", manager=ui_manager
+            relative_rect=make_rect(center=(WIDTH // 2, 250), size=(800, 200)),
+            text="Select Level", manager=ui_manager,
+            object_id="#select_level_label"
         )
 
         self.level_buttons = {}
@@ -261,7 +263,8 @@ class WinScene:
         ui_manager.clear_and_reset()
 
         pygame_gui.elements.UILabel(
-            relative_rect=make_rect(center=(WIDTH // 2, 250), size=(800, 100)), text="You Win!", manager=ui_manager
+            relative_rect=make_rect(center=(WIDTH // 2, 250), size=(800, 200)),
+            text="You Win!", manager=ui_manager
         )
 
         self.btn_return = pygame_gui.elements.UIButton(
