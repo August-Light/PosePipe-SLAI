@@ -1,9 +1,9 @@
 {
     "Endpoints": [
-        {"id": 0, "pos": [500, 100], "allow_connect": false},
-        {"id": 1, "pos": [500, 900], "allow_connect": true},
+        {"id": 0, "pos": [560, 100], "allow_connect": false},
+        {"id": 1, "pos": [560, 720], "allow_connect": true},
         {"id": 2, "pos": [1100, 900], "allow_connect": true},
-        {"id": 3, "pos": [1400, 900], "allow_connect": true},
+        {"id": 3, "pos": [1340, 720], "allow_connect": true},
         {"id": 4, "pos": [800, 900], "allow_connect": true},
         {"id": 5, "pos": [800, 100], "allow_connect": false}
     ],

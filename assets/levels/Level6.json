@@ -5,13 +5,13 @@
         
         {"id": 2, "pos": [500, 200], "allow_connect": true},
         {"id": 3, "pos": [500, 100], "allow_connect": false},
-        {"id": 4, "pos": [1320, 100], "allow_connect": false},
-        {"id": 5, "pos": [1320, 200], "allow_connect": true},
+        {"id": 4, "pos": [1420, 100], "allow_connect": false},
+        {"id": 5, "pos": [1420, 200], "allow_connect": true},
         
         {"id": 6, "pos": [500, 900], "allow_connect": true},
         {"id": 7, "pos": [500, 1000], "allow_connect": false},
-        {"id": 8, "pos": [1320, 1000], "allow_connect": false},
-        {"id": 9, "pos": [1320, 900], "allow_connect": true},
+        {"id": 8, "pos": [1420, 1000], "allow_connect": false},
+        {"id": 9, "pos": [1420, 900], "allow_connect": true},
         
         {"id": 10, "pos": [810, 640], "allow_connect": true},
         {"id": 11, "pos": [1110, 640], "allow_connect": true},
