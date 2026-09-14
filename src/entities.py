@@ -1,7 +1,7 @@
 import pygame
 from math import hypot, degrees, atan2
 
-from settings import THRESHOLD, WATER_COLOR
+from .settings import THRESHOLD, WATER_COLOR
 
 pipe_image = None
 gold_pipe_image = None

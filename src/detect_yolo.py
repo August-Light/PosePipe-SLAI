@@ -1,4 +1,4 @@
-from settings import PLATFORM
+from .settings import PLATFORM
 from ultralytics import YOLO
 
 

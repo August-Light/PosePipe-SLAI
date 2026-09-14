@@ -8,10 +8,10 @@ import cv2
 import pygame
 import pygame_gui
 
-from settings import *
-from entities import load_assets, PipeEnd, BodyEnd, Pipe, ExtraPipe
-import detect_yolo
-from graph_theory import valid_water_flow
+from src.settings import *
+from src.entities import load_assets, PipeEnd, BodyEnd, Pipe, ExtraPipe
+from src import detect_yolo
+from src.graph_theory import valid_water_flow
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
